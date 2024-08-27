@@ -27,8 +27,8 @@ export default class iBS02IR extends BaseiBS<iBS02IR_Data> {
 
   public static readonly BeaconDataStruct: ObnizBleBeaconStruct<iBS02IR_Data> = {
     battery: BaseiBS.Config.battery,
-    event: BaseiBS.Config.event,
-    ...BaseiBS.getUniqueData(2, 0x02),
+    event: BaseiBS.Config.proximity,
+    ...BaseiBS.getUniqueData(3, 0x02),
   };
 
   protected readonly staticClass = iBS02IR;
