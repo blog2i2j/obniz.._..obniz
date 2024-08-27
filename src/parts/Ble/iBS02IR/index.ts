@@ -50,4 +50,16 @@ export default class iBS02IR extends ObnizPartsBleInterface {
       iBS02IR_Ranger.getData(peripheral) ??
       null) as unknown) as iBS02IR_Data | null;
   }
+
+  public static getManufacturer(
+    peripheral: BleRemotePeripheral
+  ): 'ranger' | 'ingics' | null {
+    if (iBS02IR_Ingics.getData(peripheral)) {
+      return 'ingics';
+    }
+    if (iBS02IR_Ranger.getData(peripheral)) {
+      return 'ranger';
+    }
+    return null;
+  }
 }
