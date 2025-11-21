@@ -99,6 +99,7 @@ import { ObnizTimeoutError as _ObnizTimeoutError } from './ObnizError';
 import { ObnizPartsInterface as _ObnizPartsInterface } from './ObnizPartsInterface';
 import { ObnizPartsInfo as _ObnizPartsInfo } from './ObnizPartsInterface';
 import { PartsList } from './ObnizPartsList';
+import { createCommandManager } from './libs/wscommand';
 
 /**
  * obniz class is the abstract version of obniz Board hardware within JavaScript.
@@ -146,6 +147,10 @@ export class Obniz extends ObnizDevice {
    */
   public static get App() {
     return _ObnizApp;
+  }
+
+  public static getWsCommandModule() {
+    return createCommandManager();
   }
 }
 

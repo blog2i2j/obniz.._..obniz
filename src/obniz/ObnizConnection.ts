@@ -281,7 +281,7 @@ export abstract class ObnizConnection extends EventEmitter<
   protected socket_local: wsClient | null = null;
   protected bufferdAmoundWarnBytes: number;
   protected options: Required<ObnizOptions>;
-  protected wsCommandManager: WSCommandManager = WSCommandManagerInstance;
+  protected wsCommandManager: typeof WSCommandManagerInstance = WSCommandManagerInstance;
   protected _sendQueueTimer: ReturnType<typeof setTimeout> | null = null;
   protected _sendQueue: Uint8Array[] | null = null;
   protected _waitForLocalConnectReadyTimer: ReturnType<
@@ -331,7 +331,6 @@ export abstract class ObnizConnection extends EventEmitter<
         options.reset_obniz_on_ws_disconnection === false ? false : true,
       obnizid_dialog: options.obnizid_dialog === false ? false : true,
     };
-    this.wsCommandManager.createCommandInstances();
     if (this.autoConnect) {
       this._startAutoConnectLoopInBackground();
     }

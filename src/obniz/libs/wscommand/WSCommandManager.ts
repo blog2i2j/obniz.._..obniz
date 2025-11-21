@@ -7,7 +7,7 @@ import WSSchema from './WSSchema';
 import { HW, WSCommandAbstract } from './WSCommandAbstract';
 import { StrictEventEmitter } from 'strict-event-emitter';
 
-type WSCommandConstructor = new () => WSCommandAbstract;
+export type WSCommandConstructor = new () => WSCommandAbstract;
 
 interface Payload {
   /**
@@ -46,23 +46,24 @@ interface WSCommandManagerEventsMap {
   ) => void;
 }
 
-export class WSCommandManager {
+export class WSCommandManager<C extends { [key: string]: WSCommandAbstract }> {
   private moduleNo2Name: Record<number, string> = {};
-  private commandClasses: { [key: string]: WSCommandConstructor } = {};
-  private commands: { [key: string]: WSCommandAbstract } = {};
+  private commandClasses: Record<keyof C, new () => C[keyof C]>;
+  private commands!: Record<keyof C, C[keyof C]>;
   public events = new StrictEventEmitter<WSCommandManagerEventsMap>();
 
   static get schema(): any {
     return WSSchema;
   }
 
-  public addCommandClass(name: string, classObj: WSCommandConstructor): void {
-    this.commandClasses[name] = classObj;
+  constructor(commandClasses: Record<keyof C, new () => C[keyof C]>) {
+    this.commandClasses = commandClasses;
+    this.createCommandInstances();
   }
 
-  public createCommandInstances() {
+  private createCommandInstances() {
     for (const [name, classObj] of Object.entries(this.commandClasses)) {
-      this.commands[name] = new classObj();
+      this.commands[name as keyof C] = new classObj();
       this.moduleNo2Name[this.commands[name].module] = name;
       this.commands[name].parsed = (module, func, payload) => {
         this.events.emit('binaryGenerated', module, func, payload);

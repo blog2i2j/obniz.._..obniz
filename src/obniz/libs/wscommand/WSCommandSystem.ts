@@ -22,29 +22,29 @@ export class WSCommandSystem extends WSCommandAbstract {
 
   // Commands
 
-  public reboot(params: any) {
+  public reboot() {
     this.sendCommand(this._CommandReboot, null);
   }
 
-  public reset(params: any) {
+  public reset() {
     this.sendCommand(this._CommandReset, null);
   }
 
-  public selfCheck(params: any) {
+  public selfCheck() {
     this.sendCommand(this._CommandSelfCheck, null);
   }
 
-  public wait(params: any) {
+  public wait(params: { wait: number }) {
     const msec = params.wait;
     const buf = new Uint8Array([msec >> 8, msec]);
     this.sendCommand(this._CommandWait, buf);
   }
 
-  public keepWorkingAtOffline(params: any) {
+  public keepWorkingAtOffline(params: { keep_working_at_offline: boolean }) {
     this.resetOnDisconnect(!params.keep_working_at_offline);
   }
 
-  public ping(params: any) {
+  public ping(params: { ping: { key: number[] } }) {
     const unixtime = new Date().getTime();
     const buf = new Uint8Array(params.ping.key.length + 8);
     const upper = Math.floor(unixtime / Math.pow(2, 32));
@@ -64,7 +64,7 @@ export class WSCommandSystem extends WSCommandAbstract {
     this.sendCommand(this._CommandPingPong, buf);
   }
 
-  public resetOnDisconnect(mustReset: any) {
+  public resetOnDisconnect(mustReset: boolean) {
     const buf = new Uint8Array([mustReset ? 1 : 0]);
     this.sendCommand(this._CommandResetOnDisconnect, buf);
   }
@@ -100,7 +100,7 @@ export class WSCommandSystem extends WSCommandAbstract {
     }
   }
 
-  public pong(objToSend: any, payload: any) {
+  public pong(objToSend: any, payload: Buffer) {
     objToSend.system = objToSend.system || {};
     const pongServerTime = new Date().getTime();
 
@@ -127,7 +127,7 @@ export class WSCommandSystem extends WSCommandAbstract {
     }
   }
 
-  public notifyFromBinary(objToSend: any, func: number, payload: Uint8Array) {
+  public notifyFromBinary(objToSend: any, func: number, payload: Buffer) {
     switch (func) {
       case this._CommandVCC:
         if (payload.byteLength === 3) {
@@ -150,26 +150,22 @@ export class WSCommandSystem extends WSCommandAbstract {
     }
   }
 
-  public sleepSeconds(params: any) {
+  public sleepSeconds(params: { sleep_seconds: number }) {
     const sec = params.sleep_seconds;
     const buf = new Uint8Array([sec >> 8, sec]);
     this.sendCommand(this._CommandSleepSeconds, buf);
   }
 
-  public sleepMinute(params: any) {
+  public sleepMinute(params: { sleep_minute: number }) {
     const minute = params.sleep_minute;
     const buf = new Uint8Array([minute >> 8, minute]);
     this.sendCommand(this._CommandSleepMinute, buf);
   }
 
-  public sleepIoTrigger(params: any) {
-    let trigger = params.sleep_io_trigger;
-    if (trigger === true) {
-      trigger = 1;
-    } else {
-      trigger = 0;
-    }
-    const buf = new Uint8Array([trigger]);
+  public sleepIoTrigger(params: { sleep_io_trigger: boolean }) {
+    const trigger = params.sleep_io_trigger;
+    const triggerValue = trigger ? 1 : 0;
+    const buf = new Uint8Array([triggerValue]);
     this.sendCommand(this._CommandSleepIoTrigger, buf);
   }
 }
