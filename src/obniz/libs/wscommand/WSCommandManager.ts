@@ -58,6 +58,7 @@ export class WSCommandManager<C extends { [key: string]: WSCommandAbstract }> {
 
   constructor(commandClasses: Record<keyof C, new () => C[keyof C]>) {
     this.commandClasses = commandClasses;
+    this.commands = {} as Record<keyof C, C[keyof C]>;
     this.createCommandInstances();
   }
 

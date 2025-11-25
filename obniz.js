@@ -24265,6 +24265,7 @@ class WSCommandManager {
         this.moduleNo2Name = {};
         this.events = new strict_event_emitter_1.StrictEventEmitter();
         this.commandClasses = commandClasses;
+        this.commands = {};
         this.createCommandInstances();
     }
     static get schema() {
