@@ -2,7 +2,7 @@
  * @packageDocumentation
  * @ignore
  */
-import { WSCommandConstructor, WSCommandManager } from './WSCommandManager';
+import { WSCommandManager } from './WSCommandManager';
 import { WSCommandAD } from './WSCommandAD';
 import { WSCommandBle } from './WSCommandBle';
 import { WSCommandDirective } from './WSCommandDirective';
@@ -20,26 +20,33 @@ import { WSCommandTcp } from './WSCommandTcp';
 import { WSCommandUart } from './WSCommandUart';
 import { WSCommandWiFi } from './WSCommandWiFi';
 
-export const createCommandManager = () => {
-  const instance = new WSCommandManager({
-    WSCommandSystem,
-    WSCommandDirective,
-    WSCommandIO,
-    WSCommandPWM,
-    WSCommandUart,
-    WSCommandAD,
-    WSCommandSPI,
-    WSCommandI2C,
-    WSCommandLogicAnalyzer,
-    WSCommandDisplay,
-    WSCommandSwitch,
-    WSCommandBle,
-    WSCommandMeasurement,
-    WSCommandTcp,
-    WSCommandWiFi,
-    WSCommandPlugin,
-  });
+const commandClasses = {
+  WSCommandSystem,
+  WSCommandDirective,
+  WSCommandIO,
+  WSCommandPWM,
+  WSCommandUart,
+  WSCommandAD,
+  WSCommandSPI,
+  WSCommandI2C,
+  WSCommandLogicAnalyzer,
+  WSCommandDisplay,
+  WSCommandSwitch,
+  WSCommandBle,
+  WSCommandMeasurement,
+  WSCommandTcp,
+  WSCommandWiFi,
+  WSCommandPlugin,
+};
 
+type CommandClassMap = typeof commandClasses;
+
+export type WsCommandModules = {
+  [K in keyof CommandClassMap]: InstanceType<CommandClassMap[K]>;
+};
+
+export const createCommandManager = () => {
+  const instance = new WSCommandManager<WsCommandModules>(commandClasses);
   return instance;
 };
 

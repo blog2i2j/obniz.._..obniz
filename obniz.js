@@ -24272,10 +24272,16 @@ class WSCommandManager {
         return WSSchema_1.default;
     }
     createCommandInstances() {
-        for (const [name, classObj] of Object.entries(this.commandClasses)) {
-            this.commands[name] = new classObj();
-            this.moduleNo2Name[this.commands[name].module] = name;
-            this.commands[name].parsed = (module, func, payload) => {
+        for (const name in this.commandClasses) {
+            if (!Object.prototype.hasOwnProperty.call(this.commandClasses, name)) {
+                continue;
+            }
+            const key = name;
+            const classObj = this.commandClasses[key];
+            const instance = new classObj();
+            this.commands[key] = instance;
+            this.moduleNo2Name[instance.module] = name;
+            instance.parsed = (module, func, payload) => {
                 this.events.emit('binaryGenerated', module, func, payload);
             };
         }
@@ -25529,25 +25535,26 @@ const WSCommandSystem_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/W
 const WSCommandTcp_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandTcp.js");
 const WSCommandUart_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandUart.js");
 const WSCommandWiFi_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandWiFi.js");
+const commandClasses = {
+    WSCommandSystem: WSCommandSystem_1.WSCommandSystem,
+    WSCommandDirective: WSCommandDirective_1.WSCommandDirective,
+    WSCommandIO: WSCommandIO_1.WSCommandIO,
+    WSCommandPWM: WSCommandPWM_1.WSCommandPWM,
+    WSCommandUart: WSCommandUart_1.WSCommandUart,
+    WSCommandAD: WSCommandAD_1.WSCommandAD,
+    WSCommandSPI: WSCommandSPI_1.WSCommandSPI,
+    WSCommandI2C: WSCommandI2C_1.WSCommandI2C,
+    WSCommandLogicAnalyzer: WSCommandLogicAnalyzer_1.WSCommandLogicAnalyzer,
+    WSCommandDisplay: WSCommandDisplay_1.WSCommandDisplay,
+    WSCommandSwitch: WSCommandSwitch_1.WSCommandSwitch,
+    WSCommandBle: WSCommandBle_1.WSCommandBle,
+    WSCommandMeasurement: WSCommandMeasurement_1.WSCommandMeasurement,
+    WSCommandTcp: WSCommandTcp_1.WSCommandTcp,
+    WSCommandWiFi: WSCommandWiFi_1.WSCommandWiFi,
+    WSCommandPlugin: WSCommandPlugin_1.WSCommandPlugin,
+};
 const createCommandManager = () => {
-    const instance = new WSCommandManager_1.WSCommandManager({
-        WSCommandSystem: WSCommandSystem_1.WSCommandSystem,
-        WSCommandDirective: WSCommandDirective_1.WSCommandDirective,
-        WSCommandIO: WSCommandIO_1.WSCommandIO,
-        WSCommandPWM: WSCommandPWM_1.WSCommandPWM,
-        WSCommandUart: WSCommandUart_1.WSCommandUart,
-        WSCommandAD: WSCommandAD_1.WSCommandAD,
-        WSCommandSPI: WSCommandSPI_1.WSCommandSPI,
-        WSCommandI2C: WSCommandI2C_1.WSCommandI2C,
-        WSCommandLogicAnalyzer: WSCommandLogicAnalyzer_1.WSCommandLogicAnalyzer,
-        WSCommandDisplay: WSCommandDisplay_1.WSCommandDisplay,
-        WSCommandSwitch: WSCommandSwitch_1.WSCommandSwitch,
-        WSCommandBle: WSCommandBle_1.WSCommandBle,
-        WSCommandMeasurement: WSCommandMeasurement_1.WSCommandMeasurement,
-        WSCommandTcp: WSCommandTcp_1.WSCommandTcp,
-        WSCommandWiFi: WSCommandWiFi_1.WSCommandWiFi,
-        WSCommandPlugin: WSCommandPlugin_1.WSCommandPlugin,
-    });
+    const instance = new WSCommandManager_1.WSCommandManager(commandClasses);
     return instance;
 };
 exports.createCommandManager = createCommandManager;

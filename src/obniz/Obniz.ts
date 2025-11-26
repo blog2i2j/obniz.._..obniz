@@ -99,7 +99,8 @@ import { ObnizTimeoutError as _ObnizTimeoutError } from './ObnizError';
 import { ObnizPartsInterface as _ObnizPartsInterface } from './ObnizPartsInterface';
 import { ObnizPartsInfo as _ObnizPartsInfo } from './ObnizPartsInterface';
 import { PartsList } from './ObnizPartsList';
-import { createCommandManager } from './libs/wscommand';
+import { WsCommandModules, createCommandManager } from './libs/wscommand';
+import { WSCommandManager } from './libs/wscommand/WSCommandManager';
 
 /**
  * obniz class is the abstract version of obniz Board hardware within JavaScript.

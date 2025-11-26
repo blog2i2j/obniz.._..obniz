@@ -46,34 +46,43 @@ interface WSCommandManagerEventsMap {
   ) => void;
 }
 
-export class WSCommandManager<C extends { [key: string]: WSCommandAbstract }> {
+export class WSCommandManager<C extends Record<string, WSCommandAbstract>> {
   private moduleNo2Name: Record<number, string> = {};
-  private commandClasses: Record<keyof C, new () => C[keyof C]>;
-  private commands!: Record<keyof C, C[keyof C]>;
+  private commandClasses: { [K in keyof C]: new () => C[K] };
+  private commands!: { [K in keyof C]: C[K] };
   public events = new StrictEventEmitter<WSCommandManagerEventsMap>();
 
   static get schema(): any {
     return WSSchema;
   }
 
-  constructor(commandClasses: Record<keyof C, new () => C[keyof C]>) {
+  constructor(commandClasses: { [K in keyof C]: new () => C[K] }) {
     this.commandClasses = commandClasses;
-    this.commands = {} as Record<keyof C, C[keyof C]>;
+    this.commands = {} as { [K in keyof C]: C[K] };
     this.createCommandInstances();
   }
 
   private createCommandInstances() {
-    for (const [name, classObj] of Object.entries(this.commandClasses)) {
-      this.commands[name as keyof C] = new classObj();
-      this.moduleNo2Name[this.commands[name].module] = name;
-      this.commands[name].parsed = (module, func, payload) => {
+    for (const name in this.commandClasses) {
+      if (!Object.prototype.hasOwnProperty.call(this.commandClasses, name)) {
+        continue;
+      }
+      const key = name as keyof C;
+      const classObj = this.commandClasses[key];
+      const instance = new classObj();
+      this.commands[key] = instance;
+      this.moduleNo2Name[instance.module] = name;
+      instance.parsed = (module, func, payload) => {
         this.events.emit('binaryGenerated', module, func, payload);
       };
     }
   }
 
+  public getCommandInstance<Name extends Extract<keyof C, string>>(
+    name: Name
+  ): C[Name];
   public getCommandInstance(name: string) {
-    return this.commands[name];
+    return this.commands[name as keyof C];
   }
 
   public getCommandInstanceByModule(module: number) {
