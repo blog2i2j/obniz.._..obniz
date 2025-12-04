@@ -19,6 +19,7 @@ export class WSCommandSystem extends WSCommandAbstract {
   _CommandSleepSeconds = 10;
   _CommandSleepMinute = 11;
   _CommandSleepIoTrigger = 12;
+  _CommandUpdatePingCheckInterval = 18;
 
   // Commands
 
@@ -69,6 +70,20 @@ export class WSCommandSystem extends WSCommandAbstract {
     this.sendCommand(this._CommandResetOnDisconnect, buf);
   }
 
+  /**
+   * デバイスのpingの間隔を更新します。これはクラウドから一度切り離されると再度もとに戻ります。
+   *
+   * @param {number} intervalMilliSec
+   */
+  updatePingCheckInterval(intervalMilliSec: number) {
+    const buf = new Uint8Array(4);
+    buf[0] = intervalMilliSec >> (8 * 3);
+    buf[1] = intervalMilliSec >> (8 * 2);
+    buf[2] = intervalMilliSec >> (8 * 1);
+    buf[3] = intervalMilliSec >> (8 * 0);
+    this.sendCommand(this._CommandUpdatePingCheckInterval, buf);
+  }
+
   public parseFromJson(json: any) {
     const module = json.system;
     if (module === undefined) {
@@ -100,19 +115,19 @@ export class WSCommandSystem extends WSCommandAbstract {
     }
   }
 
-  public pong(objToSend: any, payload: Buffer) {
+  public pong(objToSend: any, payload: Uint8Array) {
     objToSend.system = objToSend.system || {};
     const pongServerTime = new Date().getTime();
 
     if (payload.length >= 16) {
-      payload = Buffer.from(payload);
+      const buf = Buffer.from(payload);
       const obnizTime =
-        payload.readUIntBE(0, 4) * Math.pow(2, 32) + payload.readUIntBE(4, 4);
+        buf.readUIntBE(0, 4) * Math.pow(2, 32) + buf.readUIntBE(4, 4);
       const pingServerTime =
-        payload.readUIntBE(8, 4) * Math.pow(2, 32) + payload.readUIntBE(12, 4);
+        buf.readUIntBE(8, 4) * Math.pow(2, 32) + buf.readUIntBE(12, 4);
       const key = [];
-      for (let i = 16; i < payload.length; i++) {
-        key.push(payload[i]);
+      for (let i = 16; i < buf.length; i++) {
+        key.push(buf.readUInt8(i));
       }
       objToSend.system.pong = {
         key,
@@ -127,7 +142,22 @@ export class WSCommandSystem extends WSCommandAbstract {
     }
   }
 
-  public notifyFromBinary(objToSend: any, func: number, payload: Buffer) {
+  public timestamp(objToSend: any, payload: Uint8Array) {
+    objToSend.system = objToSend.system || {};
+
+    if (payload.length === 4) {
+      const buf = Buffer.from(payload);
+      const unixSeconds = buf.readUIntBE(0, 4);
+      objToSend.system.timestamp = unixSeconds * 1000;
+    } else if (payload.length === 8) {
+      const buf = Buffer.from(payload);
+      const milliseconds =
+        buf.readUIntBE(0, 4) * Math.pow(2, 32) + buf.readUIntBE(4, 4);
+      objToSend.system.timestamp = milliseconds;
+    }
+  }
+
+  public notifyFromBinary(objToSend: any, func: number, payload: Uint8Array) {
     switch (func) {
       case this._CommandVCC:
         if (payload.byteLength === 3) {
@@ -164,8 +194,8 @@ export class WSCommandSystem extends WSCommandAbstract {
 
   public sleepIoTrigger(params: { sleep_io_trigger: boolean }) {
     const trigger = params.sleep_io_trigger;
-    const triggerValue = trigger ? 1 : 0;
-    const buf = new Uint8Array([triggerValue]);
+    const triggerNum = trigger === true ? 1 : 0;
+    const buf = new Uint8Array([triggerNum]);
     this.sendCommand(this._CommandSleepIoTrigger, buf);
   }
 }

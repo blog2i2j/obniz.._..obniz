@@ -252,6 +252,9 @@ module.exports = {
     "canvas": "./dist/src/obniz/libs/webpackReplace/canvas",
     "./dist/src/obniz/libs/webpackReplace/require-context": "./dist/src/obniz/libs/webpackReplace/require-context-browser",
     "./dist/src/obniz/libs/webpackReplace/dialogPollyfill": "./dist/src/obniz/libs/webpackReplace/dialogPollyfill-browser"
+  },
+  "volta": {
+    "node": "16.15.0"
   }
 }
 ;
@@ -24940,6 +24943,7 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
         this._CommandSleepSeconds = 10;
         this._CommandSleepMinute = 11;
         this._CommandSleepIoTrigger = 12;
+        this._CommandUpdatePingCheckInterval = 18;
     }
     // Commands
     reboot() {
@@ -24981,6 +24985,19 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
         const buf = new Uint8Array([mustReset ? 1 : 0]);
         this.sendCommand(this._CommandResetOnDisconnect, buf);
     }
+    /**
+     * デバイスのpingの間隔を更新します。これはクラウドから一度切り離されると再度もとに戻ります。
+     *
+     * @param {number} intervalMilliSec
+     */
+    updatePingCheckInterval(intervalMilliSec) {
+        const buf = new Uint8Array(4);
+        buf[0] = intervalMilliSec >> (8 * 3);
+        buf[1] = intervalMilliSec >> (8 * 2);
+        buf[2] = intervalMilliSec >> (8 * 1);
+        buf[3] = intervalMilliSec >> (8 * 0);
+        this.sendCommand(this._CommandUpdatePingCheckInterval, buf);
+    }
     parseFromJson(json) {
         const module = json.system;
         if (module === undefined) {
@@ -25014,12 +25031,12 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
         objToSend.system = objToSend.system || {};
         const pongServerTime = new Date().getTime();
         if (payload.length >= 16) {
-            payload = Buffer.from(payload);
-            const obnizTime = payload.readUIntBE(0, 4) * Math.pow(2, 32) + payload.readUIntBE(4, 4);
-            const pingServerTime = payload.readUIntBE(8, 4) * Math.pow(2, 32) + payload.readUIntBE(12, 4);
+            const buf = Buffer.from(payload);
+            const obnizTime = buf.readUIntBE(0, 4) * Math.pow(2, 32) + buf.readUIntBE(4, 4);
+            const pingServerTime = buf.readUIntBE(8, 4) * Math.pow(2, 32) + buf.readUIntBE(12, 4);
             const key = [];
-            for (let i = 16; i < payload.length; i++) {
-                key.push(payload[i]);
+            for (let i = 16; i < buf.length; i++) {
+                key.push(buf.readUInt8(i));
             }
             objToSend.system.pong = {
                 key,
@@ -25032,6 +25049,19 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
             objToSend.system.pong = {
                 pongServerTime,
             };
+        }
+    }
+    timestamp(objToSend, payload) {
+        objToSend.system = objToSend.system || {};
+        if (payload.length === 4) {
+            const buf = Buffer.from(payload);
+            const unixSeconds = buf.readUIntBE(0, 4);
+            objToSend.system.timestamp = unixSeconds * 1000;
+        }
+        else if (payload.length === 8) {
+            const buf = Buffer.from(payload);
+            const milliseconds = buf.readUIntBE(0, 4) * Math.pow(2, 32) + buf.readUIntBE(4, 4);
+            objToSend.system.timestamp = milliseconds;
         }
     }
     notifyFromBinary(objToSend, func, payload) {
@@ -25065,8 +25095,8 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
     }
     sleepIoTrigger(params) {
         const trigger = params.sleep_io_trigger;
-        const triggerValue = trigger ? 1 : 0;
-        const buf = new Uint8Array([triggerValue]);
+        const triggerNum = trigger === true ? 1 : 0;
+        const buf = new Uint8Array([triggerNum]);
         this.sendCommand(this._CommandSleepIoTrigger, buf);
     }
 }
