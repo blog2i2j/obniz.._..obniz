@@ -116,9 +116,9 @@ module.exports = {
     "local": "gulp --gulpfile devtools/_tools/server.js --cwd .",
     "watch": "tsc -w & webpack --watch --config ./devtools/webpack.config.js  ",
     "watch:debug": "tsc -w -p tsconfig.debug.json & webpack --watch --config ./devtools/webpack.config.js  ",
-    "build": "npm run clean && npm run lint && gulp --gulpfile devtools/_tools/server.js --cwd . build ",
+    "build": "npm run clean && npm run generate:ble-uuid && npm run lint && gulp --gulpfile devtools/_tools/server.js --cwd . build ",
     "doc": "typedoc --includes ./src/ --exclude '**/*.json' --theme ./devtools/typedocTheme --stripInternal --readme none --out docs/obnizjs --excludePrivate --excludeProtected  --media ./docs/images",
-    "build-ts": "npm run clean && npm run lint-ts && gulp --gulpfile devtools/_tools/server.js --cwd . build",
+    "build-ts": "npm run clean && npm run generate:ble-uuid && npm run lint-ts && gulp --gulpfile devtools/_tools/server.js --cwd . build",
     "version": "npm run build && npm run doc && git add docs && git add obniz.js",
     "lint": "eslint --fix . --rulesdir devtools/eslint/rule --quiet",
     "lint-js": "eslint --fix './**/*.js' --rulesdir devtools/eslint/rule --quiet",
@@ -128,7 +128,8 @@ module.exports = {
     "prepublishOnly": "npm run build",
     "code-quality": "docker run --rm -it -v $PWD:/data/project/ -p 8080:8080 jetbrains/qodana-js:2022.2-eap --show-report",
     "clean": "rimraf ./dist ./obniz.js ./obniz.d.ts",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "generate:ble-uuid": "node devtools/_tools/generateBleUuids.js"
   },
   "lint-staged": {
     "src/**/*.ts": [
@@ -4051,9 +4052,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.iBeaconData = exports.iBeaconCompanyID = exports.ObnizPartsBleConnectable = exports.ObnizPartsBle = exports.uintToArray = exports.intBE = exports.uintBE = exports.int = exports.uint = exports.fixedPoint = exports.notMatchDeviceError = void 0;
+exports.iBeaconData = exports.iBeaconDataWithStrict = exports.iBeaconCompanyID = exports.ObnizPartsBlePairable = exports.ObnizPartsBleConnectable = exports.ObnizPartsBle = exports.checkEquals = exports.fixByRange = exports.uintToArrayWithBE = exports.uintToArray = exports.intBE = exports.uintBE = exports.int = exports.uint = exports.fixedPoint = exports.notMatchDeviceError = void 0;
 const round_to_1 = __importDefault(__webpack_require__("./node_modules/round-to/index.js"));
 const ObnizError_1 = __webpack_require__("./dist/src/obniz/ObnizError.js");
+const debugFlag = false;
+const debug = (...objects) => {
+    if (!debugFlag)
+        return;
+    console.debug(...objects);
+};
 const ObnizPartsBleModeList = ['Beacon', 'Connectable', 'Pairing'];
 exports.notMatchDeviceError = new Error('Is NOT target device.');
 const fixedPoint = (value, integerBytes) => {
@@ -4070,7 +4077,9 @@ const fixedPoint = (value, integerBytes) => {
 exports.fixedPoint = fixedPoint;
 const uint = (value) => {
     let val = 0;
-    value.forEach((v, i) => (val += v << (i * 8)));
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_operators#bitwise_logical_operators
+    // eslint-disable-next-line prettier/prettier
+    value.forEach((v, i) => (val += v * (2 ** (i * 8))));
     return val;
 };
 exports.uint = uint;
@@ -4088,10 +4097,26 @@ const uintBE = (value) => (0, exports.uint)(value.reverse());
 exports.uintBE = uintBE;
 const intBE = (value) => (0, exports.int)(value.reverse());
 exports.intBE = intBE;
-const uintToArray = (value, length = 2) => new Array(length)
+const uintToArray = (value, length = 2) => new Uint8Array(length)
     .fill(0)
     .map((v, i) => value % (1 << ((i + 1) * 8)) >> (i * 8));
 exports.uintToArray = uintToArray;
+const uintToArrayWithBE = (value, length = 2) => (0, exports.uintToArray)(value, length).reverse();
+exports.uintToArrayWithBE = uintToArrayWithBE;
+const fixByRange = (name, value, min, max) => {
+    if (value < min) {
+        console.warn(`Since ${name} ranges from ${min} to ${max}, ${min} is used.`);
+        return min;
+    }
+    if (value > max) {
+        console.warn(`Since ${name} ranges from ${min} to ${max}, ${max} is used.`);
+        return max;
+    }
+    return value;
+};
+exports.fixByRange = fixByRange;
+const checkEquals = (base, target) => base.filter((v, i) => v !== target[i]).length === 0;
+exports.checkEquals = checkEquals;
 class ObnizPartsBle {
     constructor(peripheral, mode) {
         this._mode = mode;
@@ -4150,10 +4175,16 @@ class ObnizPartsBle {
      * @returns If the corresponding device is that mode, it must be null if not applicable 該当するデバイスならばそのモード、該当しなければnull
      */
     static getDeviceMode(peripheral) {
-        var _a;
-        return ((_a = this.getAvailableBleMode()
-            .map((mode) => this.isDeviceWithMode(peripheral, mode) ? mode : undefined)
-            .find((mode) => mode)) !== null && _a !== void 0 ? _a : null);
+        debug('getAvailableBleMode()', this.getAvailableBleMode());
+        for (const mode of this.getAvailableBleMode()) {
+            const check = this.isDeviceWithMode(peripheral, mode);
+            if (check) {
+                debug(`getDeviceMode(p) => ${mode}`, peripheral.address);
+                return mode;
+            }
+        }
+        debug('getDeviceMode(p) => null', peripheral.address);
+        return null;
     }
     /**
      * Check if peripherals and modes match the library.
@@ -4166,46 +4197,64 @@ class ObnizPartsBle {
      */
     static isDeviceWithMode(peripheral, mode) {
         var _a;
+        debug(`isDeviceWithMode(peripheral, ${mode})`);
         if (!this.getAvailableBleMode().includes(mode))
             return false;
         if (this.Address) {
             const defaultAddress = this.Address instanceof RegExp ? this.Address : this.Address[mode];
+            debug('defaultAddress', defaultAddress);
             if (defaultAddress !== undefined &&
-                !defaultAddress.test(peripheral.address))
+                !defaultAddress.test(peripheral.address)) {
+                debug(`defaultAddress.test(${peripheral.address}) === false`);
                 return false;
+            }
         }
         if (this.LocalName) {
             const defaultLocalName = this.LocalName instanceof RegExp
                 ? this.LocalName
                 : this.LocalName[mode];
+            debug('defaultLocalName', defaultLocalName);
             if (defaultLocalName !== undefined &&
-                !defaultLocalName.test((_a = peripheral.localName) !== null && _a !== void 0 ? _a : 'null'))
+                !defaultLocalName.test((_a = peripheral.localName) !== null && _a !== void 0 ? _a : 'null')) {
+                debug(`defaultLocalName.test(${peripheral.localName} ?? 'null') === false`);
                 return false;
+            }
         }
         if (this.ServiceUuids) {
             const defaultServiceUuids = this.getServiceUuids(mode);
+            debug('defaultServiceUuids', defaultServiceUuids);
             if (defaultServiceUuids !== undefined) {
                 const uuids = peripheral.advertisementServiceUuids();
+                debug('uuids', uuids);
                 if (defaultServiceUuids === null && uuids.length !== 0)
                     return false;
                 if (defaultServiceUuids !== null && uuids.length === 0)
                     return false;
                 if (defaultServiceUuids !== null &&
-                    defaultServiceUuids.filter((u) => !uuids.includes(u.toLowerCase()))
-                        .length !== 0)
+                    defaultServiceUuids.some((u) => !uuids.includes(u.toLowerCase()))) {
+                    debug('defaultServiceUuids.some((u) => !uuids.includes(u.toLowerCase())) === true');
                     return false;
+                }
             }
         }
-        if (!this.checkCustomData(mode, peripheral.address, peripheral.manufacturerSpecificData, this.BeaconDataLength, this.CompanyID, this.BeaconDataStruct))
+        if (!this.checkCustomData(mode, peripheral.address, peripheral.manufacturerSpecificData, this.BeaconDataLength, this.CompanyID, this.BeaconDataStruct)) {
+            debug('this.checkCustomData(mode, p.address, p.manufacturerSpecificData, this.BeaconDataLength, this.CompanyID, this.BeaconDataStruct) === false');
             return false;
-        if (!this.checkCustomData(mode, peripheral.address, peripheral.manufacturerSpecificDataInScanResponse, this.BeaconDataLength_ScanResponse, this.CompanyID_ScanResponse, this.BeaconDataStruct))
+        }
+        if (!this.checkCustomData(mode, peripheral.address, peripheral.manufacturerSpecificDataInScanResponse, this.BeaconDataLength_ScanResponse, this.CompanyID_ScanResponse, this.BeaconDataStruct, true)) {
+            debug('this.checkCustomData(mode, p.address, p.manufacturerSpecificDataInScanResponse, this.BeaconDataLength_ScanResponse, this.CompanyID_ScanResponse, this.BeaconDataStruct, true) === false');
             return false;
-        if (!this.checkCustomData(mode, peripheral.address, peripheral.serviceData, this.ServiceDataLength, this.ServiceDataUUID, this.ServiceDataStruct))
+        }
+        if (!this.checkCustomData(mode, peripheral.address, peripheral.serviceData, this.ServiceDataLength, this.ServiceDataUUID, this.ServiceDataStruct)) {
+            debug('this.checkCustomData(mode, p.address, p.serviceData, this.ServiceDataLength, this.ServiceDataUUID, this.ServiceDataStruct) === false');
             return false;
+        }
         return true;
     }
-    static checkCustomData(mode, address, data, dataLength, headID, dataStruct, inScanResponse = false) {
-        var _a;
+    static checkCustomData(mode, address, rawData, dataLength, headID, dataStruct, inScanResponse = false) {
+        var _a, _b, _c;
+        debug(`checkCustomData(mode, address, ${rawData}, ${dataLength}, ${headID}, ${dataStruct}, ${inScanResponse})`);
+        const data = rawData ? new Uint8Array(rawData) : null;
         if (headID !== undefined) {
             const defHeadID = headID instanceof Array || headID === null || headID === undefined
                 ? headID
@@ -4238,36 +4287,61 @@ class ObnizPartsBle {
                     return false;
             }
         }
-        if (dataStruct !== undefined) {
-            const defDataStruct = (dataStruct !== null &&
-                (dataStruct.Beacon || dataStruct.Connectable || dataStruct.Pairing)
-                ? dataStruct[mode]
+        if (typeof dataStruct === 'object' && dataStruct !== null) {
+            // ひとまずモードで選択してみる
+            const defDataStructByMode = dataStruct[mode];
+            // モードで選択した変数がオブジェクトまたはnullならばそのまま使い、そうでなければモードで選択せずに使用
+            const defDataStruct = (typeof defDataStructByMode === 'object'
+                ? defDataStructByMode
                 : dataStruct);
             if (defDataStruct !== undefined) {
                 // TODO: macAddress_ -> macAddress
                 if (defDataStruct && ((_a = defDataStruct.macAddress_) === null || _a === void 0 ? void 0 : _a.type) === 'check') {
-                    defDataStruct.macAddress_.data = new Array(6)
-                        .fill(0)
-                        .map((v, i) => parseInt(address.slice(i * 2, (i + 1) * 2), 16))
-                        .reverse();
+                    defDataStruct.macAddress_ = Object.assign(Object.assign({}, defDataStruct.macAddress_), { data: new Array(6)
+                            .fill(0)
+                            .map((v, i) => parseInt(address.slice(i * 2, (i + 1) * 2), 16))
+                            .reverse() });
                 }
-                if (defDataStruct !== null &&
-                    data !== null &&
-                    Object.values(defDataStruct).filter((config) => {
-                        var _a, _b;
-                        return inScanResponse === ((_a = config.scanResponse) !== null && _a !== void 0 ? _a : false) &&
-                            config.type === 'check' &&
-                            data
-                                .slice(2 + config.index, 2 + config.index + ((_b = config.length) !== null && _b !== void 0 ? _b : 1))
-                                .filter((d, i) => {
-                                var _a;
-                                return d !==
-                                    (typeof config.data === 'number'
-                                        ? [config.data]
-                                        : (_a = config.data) !== null && _a !== void 0 ? _a : [])[i];
-                            }).length !== 0;
-                    }).length !== 0)
+                if (defDataStruct === null && data === null) {
+                    // OK
+                }
+                else if (defDataStruct !== null && data === null) {
+                    // defDataStructではNULLであるべきかどうかを
+                    // AdvertisementDataとScanResponseData別に明記できないため、判定をスキップ
+                }
+                else if (defDataStruct === null && data !== null) {
+                    // どちらかが明示的に空なのに存在するため、ミスマッチ
                     return false;
+                }
+                else if (defDataStruct !== null && data !== null) {
+                    // チェック対象となる設定を抽出
+                    const configs = Object.values(defDataStruct).filter((config) => {
+                        var _a;
+                        return inScanResponse === ((_a = config.scanResponse) !== null && _a !== void 0 ? _a : false) &&
+                            config.type === 'check';
+                    });
+                    for (const config of configs) {
+                        // チェック対象となるバイト列
+                        const targetData = data.slice(2 + config.index, 2 + config.index + ((_b = config.length) !== null && _b !== void 0 ? _b : 1));
+                        if (typeof config.func === 'function') {
+                            // funcが関数ならば、実行して確認
+                            const result = config.func(targetData);
+                            if (!result) {
+                                return false;
+                            }
+                        }
+                        else if (typeof config.data === 'number' ||
+                            Array.isArray(config.data)) {
+                            // dataに値や配列があれば、それらを比較
+                            const baseData = typeof config.data === 'number'
+                                ? [config.data]
+                                : (_c = config.data) !== null && _c !== void 0 ? _c : [];
+                            if (!(0, exports.checkEquals)(baseData, targetData)) {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         }
         return true;
@@ -4305,8 +4379,11 @@ class ObnizPartsBle {
     }
     /**
      * アドバタイジングデータを連想配列に成形
+     *
      * 利用可能なモード: Beacon, Connectable(一部のみ)
+     *
      * Form advertising data into an associative array
+     *
      * Available modes: Beacon, Connectable(only part)
      */
     getData() {
@@ -4322,19 +4399,19 @@ class ObnizPartsBle {
                 : null;
         if (!data)
             throw new Error('Manufacturer specific data is null.');
-        const defDataStruct = (dataStruct.Beacon ||
-            dataStruct.Connectable ||
-            dataStruct.Pairing
-            ? dataStruct[this.mode]
+        // ひとまずモードで選択してみる
+        const defDataStructByMode = dataStruct[this.mode];
+        // モードで選択した変数がオブジェクトまたはnullならばそのまま使い、そうでなければモードで選択せずに使用
+        const defDataStruct = (typeof defDataStructByMode === 'object'
+            ? defDataStructByMode
             : dataStruct);
         if (defDataStruct === null)
             throw new Error('Data analysis is not defined.');
         return Object.fromEntries(Object.entries(defDataStruct)
-            .map(([name, c]) => {
-            var _a, _b, _c;
-            if (c.type === 'check')
+            .map(([name, config]) => {
+            var _a, _b, _c, _d;
+            if (config.type === 'check')
                 return [];
-            const config = c;
             if (!(config.scanResponse ? this.beaconDataInScanResponse : data))
                 throw new Error('manufacturerSpecificData is null.');
             const vals = ((_a = (config.scanResponse ? this.beaconDataInScanResponse : data)) !== null && _a !== void 0 ? _a : []).slice(config.index, config.index + ((_b = config.length) !== null && _b !== void 0 ? _b : 1));
@@ -4367,11 +4444,12 @@ class ObnizPartsBle {
                 else
                     return [name, config.func(vals, this.peripheral)];
             else {
-                const multi = (_c = config.multiple) !== null && _c !== void 0 ? _c : 1;
+                const base = (_c = config.base) !== null && _c !== void 0 ? _c : 0;
+                const multi = (_d = config.multiple) !== null && _d !== void 0 ? _d : 1;
                 const f = (d) => config.fixedIntegerBytes !== undefined
                     ? (0, exports.fixedPoint)(d, config.fixedIntegerBytes)
                     : (config.type.indexOf('u') === 0 ? exports.uint : exports.int)(config.type.indexOf('BE') >= 0 ? d.reverse() : d);
-                const num = f(vals) * multi;
+                const num = base + f(vals) * multi;
                 return [
                     name,
                     config.round !== undefined ? (0, round_to_1.default)(num, config.round) : num,
@@ -4418,8 +4496,10 @@ ObnizPartsBle.ServiceUuids = undefined;
  */
 ObnizPartsBle.BeaconDataLength = undefined;
 /**
+ * Overall length of manufacturer-specific data.
  * Used as a condition of isDevice() by default.
  *
+ * 製造者固有データ全体の長さ
  * 標準でisDevice()の条件として使用
  */
 ObnizPartsBle.BeaconDataLength_ScanResponse = undefined;
@@ -4450,11 +4530,26 @@ ObnizPartsBle.ServiceDataUUID = undefined;
 class ObnizPartsBleConnectable extends ObnizPartsBle {
     constructor(peripheral, mode) {
         super(peripheral, mode);
-        this.peripheral.ondisconnect = async (reason) => {
-            await this.beforeOnDisconnectWait(reason);
+        this.disconnectedListeners = [];
+        this.peripheral.ondisconnect = (reason) => {
+            this.disconnectedListeners.forEach((func) => func(reason));
             if (this.ondisconnect)
-                await this.ondisconnect(reason);
+                this.ondisconnect(reason);
         };
+    }
+    /**
+     * Register functions to be called on disconnection.
+     *
+     * Note: Registration is reset upon connection, so please register after connection.
+     *
+     * 切断時に呼ばれる関数を登録
+     *
+     * 注意: 接続時に登録がリセットされるため、接続後に登録してください
+     *
+     * @param func Function to be registered 登録したい関数
+     */
+    registerDisconnected(func) {
+        this.disconnectedListeners.push(func);
     }
     /**
      * Connect to peripherals with validation.
@@ -4462,18 +4557,21 @@ class ObnizPartsBleConnectable extends ObnizPartsBle {
      * バリデーションのあるペリフェラルへの接続
      *
      * @param keys: Key acquired when pairing previously 以前にペアリングしたときに取得されたキー
+     * @param setting: Additional settings when connecting 接続時の追加設定
      */
-    async connectWait(keys) {
+    async connectWait(keys, setting) {
+        var _a;
+        if (this.peripheral.connected) {
+            return;
+        }
+        // 切断時に呼ぶ関数一覧を全て削除
+        this.disconnectedListeners.splice(0);
         // TODO: Enable Validation
         // if (this.mode !== 'Connectable')
         //   throw new Error(
         //     `Connection can only be used in connectable mode, the current mode is ${this.mode}`
         //   );
-        await this.peripheral.connectWait({
-            pairingOption: {
-                keys,
-            },
-        });
+        await this.peripheral.connectWait(Object.assign({ pairingOption: Object.assign({ keys }, ((_a = setting === null || setting === void 0 ? void 0 : setting.pairingOption) !== null && _a !== void 0 ? _a : {})) }, (setting !== null && setting !== void 0 ? setting : {})));
     }
     /**
      * Disconnect from peripheral.
@@ -4481,7 +4579,12 @@ class ObnizPartsBleConnectable extends ObnizPartsBle {
      * ペリフェラルから切断
      */
     async disconnectWait() {
+        if (!this.peripheral.connected) {
+            return;
+        }
         await this.peripheral.disconnectWait();
+        // 切断時に呼ぶ関数一覧を全て削除
+        this.disconnectedListeners.splice(0);
     }
     /**
      * Check if connected.
@@ -4534,12 +4637,12 @@ class ObnizPartsBleConnectable extends ObnizPartsBle {
      *
      * @param serviceUuid Service UUID
      * @param characteristicUuid Characteristic UUID
-     * @param data Write data
-     * @returns Data write result
+     * @param data Write data 書き込むデータ
+     * @returns Data write result データ書き込み結果
      */
     async writeCharWait(serviceUuid, characteristicUuid, data, needResponse) {
         const characteristic = this.getChar(serviceUuid, characteristicUuid);
-        return await characteristic.writeWait(data, needResponse);
+        return await characteristic.writeWait(data instanceof Uint8Array ? Array.from(data) : data, needResponse);
     }
     /**
      * Register notification to any characteristic of any service.
@@ -4548,7 +4651,7 @@ class ObnizPartsBleConnectable extends ObnizPartsBle {
      *
      * @param serviceUuid Service UUID
      * @param characteristicUuid Characteristic UUID
-     * @param callback It is called when data comes
+     * @param callback Function called when data arrives データが来たときに呼ばれる関数
      */
     async subscribeWait(serviceUuid, characteristicUuid, callback) {
         const characteristic = this.getChar(serviceUuid, characteristicUuid);
@@ -4570,8 +4673,82 @@ class ObnizPartsBleConnectable extends ObnizPartsBle {
     }
 }
 exports.ObnizPartsBleConnectable = ObnizPartsBleConnectable;
+class ObnizPartsBlePairable extends ObnizPartsBleConnectable {
+    constructor() {
+        super(...arguments);
+        /**
+         * Disconnect request after pairing
+         *
+         * ペアリング後に切断要求を行う
+         */
+        this.requestDisconnectAfterPairing = true;
+        /**
+         * Wait for disconnect event at the end of pairing
+         *
+         * ペアリングの終了時には切断イベントを待つ
+         */
+        this.waitDisconnectAfterPairing = true;
+    }
+    /**
+     * After pairing and before disconnect
+     *
+     * ペアリング後、切断前に行う操作
+     */
+    async afterPairingWait() {
+        // do nothing
+    }
+    /**
+     * Perform pairing
+     *
+     * ペアリングを実行
+     *
+     * @returns Pairing key ペアリングキー
+     */
+    async pairingWait() {
+        // 接続と同時にペアリングを実行
+        await this.connectWait(undefined, {
+            waitUntilPairing: true,
+        });
+        // ペアリングキーを取得
+        const keys = await this.peripheral.getPairingKeysWait();
+        /**
+          以下の実装と同じ
+          await this._peripheral.connectWait({
+            pairingOption: {
+              onPairedCallback: (keys) => {
+                gotKeys = keys;
+              },
+              onPairingFailed: (e) => {
+                throw e;
+              },
+            },
+          });
+         */
+        // 任意のコードを実行
+        await this.afterPairingWait();
+        const promise = new Promise((resolve) => {
+            this.registerDisconnected(() => {
+                // ペアリングキーを返す
+                resolve(keys);
+            });
+        });
+        // 切断要求を送信
+        if (this.requestDisconnectAfterPairing) {
+            await this.disconnectWait();
+        }
+        if (this.waitDisconnectAfterPairing) {
+            // 切断完了を待つ
+            return await promise;
+        }
+        else {
+            // 切断完了を待たずにペアリングキーを返す
+            return keys;
+        }
+    }
+}
+exports.ObnizPartsBlePairable = ObnizPartsBlePairable;
 exports.iBeaconCompanyID = [0x4c, 0x00];
-exports.iBeaconData = 
+exports.iBeaconDataWithStrict = 
 // length !== 25
 {
     type: {
@@ -4609,6 +4786,7 @@ exports.iBeaconData =
         func: (d, p) => { var _a; return (_a = p.rssi) !== null && _a !== void 0 ? _a : 0; },
     },
 };
+exports.iBeaconData = exports.iBeaconDataWithStrict;
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__("./node_modules/buffer/index.js").Buffer))
 
@@ -8611,6 +8789,9 @@ class BleRemotePeripheral {
             this.connected = true;
             this.connected_at = new Date();
             try {
+                if (this._connectSetting.connectionParameterUpdateAccept === false) {
+                    this.obnizBle.centralBindings._signalings[this.address].connectionParameterUpdateAccept = false;
+                }
                 if (this._connectSetting.waitUntilPairing &&
                     !(await this.isPairingFinishedWait())) {
                     // console.log('waitUntilPairing');
@@ -12034,6 +12215,7 @@ const SIGNALING_CID = 0x0005;
 class Signaling extends eventemitter3_1.default {
     constructor(handle, aclStream) {
         super();
+        this.connectionParameterUpdateAccept = true;
         this._handle = handle;
         this._aclStream = aclStream;
         this.onAclStreamDataBinded = this.onAclStreamData.bind(this);
@@ -12074,9 +12256,16 @@ class Signaling extends eventemitter3_1.default {
         response.writeUInt8(CONNECTION_PARAMETER_UPDATE_RESPONSE, 0); // code
         response.writeUInt8(identifier, 1); // identifier
         response.writeUInt16LE(2, 2); // length
-        response.writeUInt16LE(0, 4);
+        if (this.connectionParameterUpdateAccept) {
+            response.writeUInt16LE(0, 4); // accept
+        }
+        else {
+            response.writeUInt16LE(1, 4); // reject
+        }
         this._aclStream.write(SIGNALING_CID, response);
-        this.emit('connectionParameterUpdateRequest', this._handle, minInterval, maxInterval, latency, supervisionTimeout);
+        if (this.connectionParameterUpdateAccept) {
+            this.emit('connectionParameterUpdateRequest', this._handle, minInterval, maxInterval, latency, supervisionTimeout);
+        }
     }
 }
 exports.Signaling = Signaling;
@@ -18215,10 +18404,6 @@ class PeripheralI2C extends ComponentAbstact_1.ComponentAbstract {
         if (this.state.pull) {
             this.Obniz.getIO(this.state.sda).pull(this.state.pull);
             this.Obniz.getIO(this.state.scl).pull(this.state.pull);
-        }
-        else {
-            this.Obniz.getIO(this.state.sda).pull(null);
-            this.Obniz.getIO(this.state.scl).pull(null);
         }
         if (this.state.gnd !== undefined) {
             this.Obniz.getIO(this.state.gnd).output(false);
@@ -28387,8 +28572,8 @@ class HEM_9200T {
      */
     static isDevice(peripheral) {
         if (peripheral.localName &&
-            (peripheral.localName.startsWith('BLESmart_') ||
-                peripheral.localName.startsWith('BLEsmart_'))) {
+            (peripheral.localName.startsWith('BLESmart_00000116') ||
+                peripheral.localName.startsWith('BLEsmart_00000116'))) {
             return true;
         }
         return false;
@@ -31370,11 +31555,11 @@ class PLS_01BT {
          * 計測結果を受け取ったときにコールバック
          */
         this.onmeasured = null;
+        this._peripheral = null;
         this._uuids = {
             service: 'CDEACB80-5235-4C07-8846-93A37EE6B86D',
             rxChar: 'CDEACB81-5235-4C07-8846-93A37EE6B86D',
         };
-        this._peripheral = null;
         this._rxCharacteristic = null;
         this._txCharacteristic = null;
         if (peripheral && !PLS_01BT.isDevice(peripheral)) {
@@ -31862,6 +32047,7 @@ class RS_BTEVS1 extends ObnizPartsBleAbstract_1.ObnizPartsBleConnectable {
                 pm1_0: Buffer.from(measureData).readUInt8(2),
                 pm2_5: Buffer.from(measureData).readUInt8(3),
                 pm4_0: Buffer.from(measureData).readUInt8(4),
+                pm5_0: Buffer.from(measureData).readUInt8(4),
                 pm10_0: Buffer.from(measureData).readUInt8(5),
                 temp: Buffer.from(measureData).readUInt8(6),
                 humid: Buffer.from(measureData).readUInt8(7),
@@ -31872,6 +32058,7 @@ class RS_BTEVS1 extends ObnizPartsBleAbstract_1.ObnizPartsBleConnectable {
             pm1_0: Buffer.from(measureData).readUInt8(2),
             pm2_5: Buffer.from(measureData).readUInt8(3),
             pm4_0: Buffer.from(measureData).readUInt8(4),
+            pm5_0: Buffer.from(measureData).readUInt8(4),
             pm10_0: Buffer.from(measureData).readUInt8(5),
             temp: Buffer.from(measureData).readInt16LE(6) / 10,
             humid: Buffer.from(measureData).readUInt8(8),
@@ -32125,8 +32312,8 @@ RS_BTEVS1.BeaconDataStruct = {
         index: 6,
         length: 2,
         type: 'custom',
-        multiple: 0.1,
-        round: 1,
+        // multiple: 0.1,
+        // round: 1,
         func: (data, p) => {
             var _a, _b, _c;
             return ((_b = (_a = p.manufacturerSpecificData) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) + 1 === 0x0b &&
@@ -33279,14 +33466,15 @@ const t = {
     func: findType('temperature', 0.01),
 };
 class STM550B extends ObnizPartsBleAbstract_1.ObnizPartsBle {
-    constructor(peripheral, mode) {
-        super(peripheral, mode);
+    constructor() {
+        super(...arguments);
         this.staticClass = STM550B;
     }
 }
 exports.default = STM550B;
 STM550B.PartsName = 'STM550B';
 STM550B.AvailableBleMode = 'Beacon';
+STM550B.CompanyID = [0xda, 0x03];
 STM550B.BeaconDataStruct = {
     temperature: {
         index: 4,
@@ -33336,9 +33524,6 @@ STM550B.BeaconDataStruct = {
         type: 'custom',
         func: findType('acceleration_vector'),
     },
-};
-STM550B.CompanyID = {
-    Beacon: [0xda, 0x03],
 };
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__("./node_modules/buffer/index.js").Buffer))
@@ -36501,7 +36686,7 @@ class iBS02PIR extends iBS_1.BaseiBS {
 }
 exports.default = iBS02PIR;
 iBS02PIR.PartsName = 'iBS02PIR';
-iBS02PIR.BeaconDataStruct = Object.assign({ battery: iBS_1.BaseiBS.Config.battery, event: iBS_1.BaseiBS.Config.event }, iBS_1.BaseiBS.getUniqueData(2, 0x01));
+iBS02PIR.BeaconDataStruct = Object.assign({ battery: iBS_1.BaseiBS.Config.battery, event: iBS_1.BaseiBS.Config.pir }, iBS_1.BaseiBS.getUniqueData(3, 0x01));
 
 
 /***/ }),
@@ -36795,7 +36980,7 @@ iBS04i.CompanyID = ObnizPartsBleAbstract_1.iBeaconCompanyID;
 iBS04i.CompanyID_ScanResponse = iBS_1.BaseiBS.CompanyID;
 iBS04i.BeaconDataLength = 0x1a;
 iBS04i.BeaconDataLength_ScanResponse = iBS_1.BaseiBS.BeaconDataLength;
-iBS04i.BeaconDataStruct = Object.assign(Object.assign({ battery: Object.assign(Object.assign({}, iBS_1.BaseiBS.Config.battery), { scanResponse: true }), button: Object.assign(Object.assign({}, iBS_1.BaseiBS.Config.button), { scanResponse: true }) }, iBS_1.BaseiBS.getUniqueData(4, 0x18, 0, true)), ObnizPartsBleAbstract_1.iBeaconData);
+iBS04i.BeaconDataStruct = Object.assign(Object.assign({ battery: Object.assign(Object.assign({}, iBS_1.BaseiBS.Config.battery), { scanResponse: true }), button: Object.assign(Object.assign({}, iBS_1.BaseiBS.Config.button), { scanResponse: true }) }, iBS_1.BaseiBS.getUniqueData(4, 0x18, 0, true)), ObnizPartsBleAbstract_1.iBeaconDataWithStrict);
 
 
 /***/ }),
@@ -43875,6 +44060,31 @@ BaseiBS.Config = {
         index: 7,
         length: 2,
         type: 'numLE',
+    },
+    flood: {
+        index: 4,
+        type: 'bool01000000',
+    },
+    voltage: {
+        index: 7,
+        length: 2,
+        multiple: 0.001,
+        type: 'numLE',
+    },
+    current: {
+        index: 7,
+        length: 2,
+        multiple: 0.000001,
+        type: 'numLE',
+    },
+    triggered: {
+        index: 4,
+        type: 'bool01000000',
+    },
+    triggered_count: {
+        index: 7,
+        length: 2,
+        type: 'unsignedNumLE',
     },
     count: {
         index: 7,
