@@ -2672,7 +2672,7 @@ class ObnizConnection extends eventemitter3_1.default {
                     if (compressed) {
                         sendData = compressed;
                         if (this.debugprintBinary) {
-                            this.log('binalized: ' + new Uint8Array(compressed).toString());
+                            this.log('binalized(send): ' + new Uint8Array(compressed).toString());
                         }
                     }
                 }

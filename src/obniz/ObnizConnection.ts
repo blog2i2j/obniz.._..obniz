@@ -35,6 +35,14 @@ interface ConnectedNetworkWiFiMESH {
   rssi: number;
 }
 
+interface ConnectedNetworkCellular {
+  imsi: string;
+  imei: string;
+  iccid: string;
+  cnum: string;
+  rssi: number;
+}
+
 export interface ConnectedNetwork {
   /**
    * Epoch Unix Timestamp (seconds) at device become online on the cloud
@@ -65,6 +73,11 @@ export interface ConnectedNetwork {
    * Wi-Fi MESH information when net is wifimesh
    */
   wifimesh?: ConnectedNetworkWiFiMESH;
+
+  /**
+   * Cellular information when net is cellular
+   */
+  cellular?: ConnectedNetworkCellular;
 }
 
 /**
@@ -566,20 +579,22 @@ export abstract class ObnizConnection extends EventEmitter<
         return;
       }
 
-      let sendData = JSON.stringify([obj]);
+      let sendData: string | Uint8Array = JSON.stringify([obj]);
       if (this.debugprint) {
         this._print_debug('send: ' + sendData);
       }
 
       /* compress */
       if (this.options.binary && options.local_connect) {
-        let compressed: any;
+        let compressed: Uint8Array | null;
         try {
           compressed = this.wsCommandManager.compress(JSON.parse(sendData)[0]);
           if (compressed) {
             sendData = compressed;
             if (this.debugprintBinary) {
-              this.log('binalized: ' + new Uint8Array(compressed).toString());
+              this.log(
+                'binalized(send): ' + new Uint8Array(compressed).toString()
+              );
             }
           }
         } catch (e) {
@@ -589,7 +604,7 @@ export abstract class ObnizConnection extends EventEmitter<
           });
           this.error({
             alert: 'error',
-            message: sendData,
+            message: sendData as string,
           });
           throw e;
         }
