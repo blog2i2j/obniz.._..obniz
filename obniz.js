@@ -92,7 +92,7 @@ var Obniz =
 
 module.exports = {
   "name": "obniz",
-  "version": "3.31.0-beta.2",
+  "version": "3.32.0-beta.0",
   "description": "obniz sdk for javascript",
   "main": "./dist/src/obniz/index.js",
   "types": "./dist/src/obniz/index.d.ts",
@@ -2387,6 +2387,11 @@ class ObnizConnection extends eventemitter3_1.default {
     constructor(id, options) {
         super();
         this._measureTraffic = null;
+        /**
+         * This variable sets interval time to check connection state to obniz Device.
+         *
+         */
+        this.connectionCheckLoopInterval = null;
         this.socket = null;
         this.socket_local = null;
         this.wsCommandManager = wscommand_1.WSCommandManagerInstance;
@@ -2955,6 +2960,7 @@ class ObnizConnection extends eventemitter3_1.default {
     }
     _connectLocalWait() {
         const host = this._localConnectIp;
+        this.connectionCheckLoopInterval = null; // local connectしないのであれば OSとの通信確認は不要
         if (!host || !this.options.binary || !this.options.local_connect) {
             return;
             // cannot local connect
@@ -2994,7 +3000,10 @@ class ObnizConnection extends eventemitter3_1.default {
         });
         this.socket_local = ws;
         return new Promise((resolve, reject) => {
-            this.once('_localConnectReady', resolve);
+            this.once('_localConnectReady', () => {
+                this.connectionCheckLoopInterval = 60 * 1000; // local connectするのであればOSとの通信確認は必要
+                resolve();
+            });
             this.once('_localConnectClose', () => {
                 reject(new Error('Cannot use local_connect because the connection was rejected'));
             });
@@ -3272,47 +3281,53 @@ class ObnizConnection extends eventemitter3_1.default {
             clearTimeout(this._nextPingTimeout);
         }
         this._nextPingTimeout = setTimeout(async () => {
-            const loopInterval = 60 * 1000; // 60 sec
-            const loopTimeout = 30 * 1000; // 30 sec
+            var _a;
             if (this._nextPingTimeout) {
                 clearTimeout(this._nextPingTimeout);
             }
             this._nextPingTimeout = null;
+            const enablePingPong = this.connectionCheckLoopInterval !== null;
+            const loopInterval = (_a = this.connectionCheckLoopInterval) !== null && _a !== void 0 ? _a : 60 * 1000;
+            const loopTimeout = 30 * 1000; // 30 sec
+            if (!enablePingPong) {
+                return;
+            }
+            if (this.connectionState !== 'connected') {
+                return;
+            }
+            const currentTime = new Date().getTime();
+            // after 15 sec from last data received
+            if (this._lastDataReceivedAt + loopTimeout < currentTime) {
+                const time = this._lastDataReceivedAt;
+                try {
+                    const p = this.pingWait();
+                    const wait = new Promise((resolve, reject) => {
+                        setTimeout(reject, loopTimeout);
+                    });
+                    await Promise.race([p, wait]);
+                    // this.log("ping/pong success");
+                }
+                catch (e) {
+                    if (this.connectionState !== 'connected') {
+                        // already closed
+                    }
+                    else if (time !== this._lastDataReceivedAt) {
+                        // this will be disconnect -> reconnect while pingWait
+                    }
+                    else {
+                        // ping error or timeout
+                        // this.error("ping/pong response timeout error");
+                        this.wsOnClose('ping/pong response timeout error');
+                        return;
+                    }
+                }
+            }
+            else {
+                // this.log("ping/pong not need");
+            }
             if (this.connectionState === 'connected') {
-                const currentTime = new Date().getTime();
-                // after 15 sec from last data received
-                if (this._lastDataReceivedAt + loopTimeout < currentTime) {
-                    const time = this._lastDataReceivedAt;
-                    try {
-                        const p = this.pingWait();
-                        const wait = new Promise((resolve, reject) => {
-                            setTimeout(reject, loopTimeout);
-                        });
-                        await Promise.race([p, wait]);
-                        // this.log("ping/pong success");
-                    }
-                    catch (e) {
-                        if (this.connectionState !== 'connected') {
-                            // already closed
-                        }
-                        else if (time !== this._lastDataReceivedAt) {
-                            // this will be disconnect -> reconnect while pingWait
-                        }
-                        else {
-                            // ping error or timeout
-                            // this.error("ping/pong response timeout error");
-                            this.wsOnClose('ping/pong response timeout error');
-                            return;
-                        }
-                    }
-                }
-                else {
-                    // this.log("ping/pong not need");
-                }
-                if (this.connectionState === 'connected') {
-                    if (!this._nextPingTimeout) {
-                        this._nextPingTimeout = setTimeout(this._startPingLoopInBackground.bind(this), loopInterval);
-                    }
+                if (!this._nextPingTimeout) {
+                    this._nextPingTimeout = setTimeout(this._startPingLoopInBackground.bind(this), loopInterval);
                 }
             }
         }, 0);
