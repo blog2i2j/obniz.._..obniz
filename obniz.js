@@ -365,6 +365,7 @@ var map = {
 	"./request/tcp/disconnect.yml": "./dist/src/json_schema/request/tcp/disconnect.yml",
 	"./request/tcp/index.yml": "./dist/src/json_schema/request/tcp/index.yml",
 	"./request/tcp/write.yml": "./dist/src/json_schema/request/tcp/write.yml",
+	"./request/uart/de.yml": "./dist/src/json_schema/request/uart/de.yml",
 	"./request/uart/deinit.yml": "./dist/src/json_schema/request/uart/deinit.yml",
 	"./request/uart/index.yml": "./dist/src/json_schema/request/uart/index.yml",
 	"./request/uart/init.yml": "./dist/src/json_schema/request/uart/init.yml",
@@ -1049,7 +1050,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/spi/init_master.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/spi/init_master","type":"object","required":["mode","clock"],"uniqueKeys":["mosi","miso","clk"],"properties":{"mode":{"type":"string","enum":["master"]},"clk":{"$ref":"/pinSetting"},"mosi":{"$ref":"/pinSetting"},"miso":{"$ref":"/pinSetting"},"clock":{"type":"integer","default":115200,"minimum":1,"maximum":26000000,"desription":"frequency (Hz)"}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/spi/init_master","type":"object","required":["mode","clock"],"uniqueKeys":["mosi","miso","clk"],"properties":{"mode":{"type":"string","enum":["master"]},"clk":{"$ref":"/pinSetting"},"mosi":{"$ref":"/pinSetting"},"miso":{"$ref":"/pinSetting"},"cs":{"$ref":"/pinSetting"},"clock":{"type":"integer","default":115200,"minimum":1,"maximum":26000000,"desription":"frequency (Hz)"}}}
 
 /***/ }),
 
@@ -1169,6 +1170,13 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/tcp/write","type":"object","required":["write"],"properties":{"write":{"type":"object","required":["data"],"additionalProperties":false,"properties":{"data":{"$ref":"/dataArray"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/uart/de.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/uart/de","type":"object","required":["de"],"uniqueKeys":["de"],"properties":{"de":{"$ref":"/pinSetting"}}}
 
 /***/ }),
 
@@ -18878,6 +18886,7 @@ class PeripheralSPI extends ComponentAbstact_1.ComponentAbstract {
             'clk',
             'mosi',
             'miso',
+            'cs',
             'frequency',
             'drive',
             'pull',
@@ -18889,6 +18898,7 @@ class PeripheralSPI extends ComponentAbstact_1.ComponentAbstract {
             'mosi',
             'miso',
             'gnd',
+            'cs',
         ];
         for (const key of ioKeys) {
             if (this.params[key] && !this.Obniz.isValidIO(this.params[key])) {
@@ -18908,6 +18918,9 @@ class PeripheralSPI extends ComponentAbstact_1.ComponentAbstract {
         if (this.params.miso !== undefined) {
             obj['spi' + this.id].miso = this.params.miso;
         }
+        if (this.params.cs !== undefined) {
+            obj['spi' + this.id].cs = this.params.cs;
+        }
         if (this.params.drive) {
             if (this.params.clk !== undefined) {
                 this.Obniz.getIO(this.params.clk).drive(this.params.drive);
@@ -18918,16 +18931,8 @@ class PeripheralSPI extends ComponentAbstact_1.ComponentAbstract {
             if (this.params.miso !== undefined) {
                 this.Obniz.getIO(this.params.miso).drive(this.params.drive);
             }
-        }
-        else {
-            if (this.params.clk !== undefined) {
-                this.Obniz.getIO(this.params.clk).drive('5v');
-            }
-            if (this.params.mosi !== undefined) {
-                this.Obniz.getIO(this.params.mosi).drive('5v');
-            }
-            if (this.params.miso !== undefined) {
-                this.Obniz.getIO(this.params.miso).drive('5v');
+            if (this.params.cs !== undefined) {
+                this.Obniz.getIO(this.params.cs).drive(this.params.drive);
             }
         }
         if (this.params.pull) {
@@ -18940,16 +18945,8 @@ class PeripheralSPI extends ComponentAbstact_1.ComponentAbstract {
             if (this.params.miso !== undefined) {
                 this.Obniz.getIO(this.params.miso).pull(this.params.pull);
             }
-        }
-        else {
-            if (this.params.clk !== undefined) {
-                this.Obniz.getIO(this.params.clk).pull(null);
-            }
-            if (this.params.mosi !== undefined) {
-                this.Obniz.getIO(this.params.mosi).pull(null);
-            }
-            if (this.params.miso !== undefined) {
-                this.Obniz.getIO(this.params.miso).pull(null);
+            if (this.params.cs !== undefined) {
+                this.Obniz.getIO(this.params.cs).pull(this.params.pull);
             }
         }
         if (this.params.gnd !== undefined) {
@@ -19141,18 +19138,10 @@ class PeripheralUART extends ComponentAbstact_1.ComponentAbstract {
             this.Obniz.getIO(this.params.rx).drive(this.params.drive);
             this.Obniz.getIO(this.params.tx).drive(this.params.drive);
         }
-        else {
-            this.Obniz.getIO(this.params.rx).drive('5v');
-            this.Obniz.getIO(this.params.tx).drive('5v');
-        }
         // eslint-disable-next-line no-prototype-builtins
         if (this.params.hasOwnProperty('pull')) {
             this.Obniz.getIO(this.params.rx).pull(this.params.pull);
             this.Obniz.getIO(this.params.tx).pull(this.params.pull);
-        }
-        else {
-            this.Obniz.getIO(this.params.rx).pull(null);
-            this.Obniz.getIO(this.params.tx).pull(null);
         }
         // eslint-disable-next-line no-prototype-builtins
         if (this.params.hasOwnProperty('gnd')) {
@@ -19179,6 +19168,21 @@ class PeripheralUART extends ComponentAbstact_1.ComponentAbstract {
         this.Obniz.send(obj);
         this.received = [];
         this.used = true;
+    }
+    /**
+     * Setting DE IO. IF DE is set, then OS will automatically HIGH when start transmitting and LOW on end of transmitting.
+     *
+     * @param io_de IO of DE(TX Enable)
+     */
+    setDE(io_de) {
+        if (!this.used) {
+            throw new Error(`uart${this.id} is not started`);
+        }
+        const obj = {};
+        obj['uart' + this.id] = {
+            de: io_de,
+        };
+        this.Obniz.send(obj);
     }
     /**
      * This sends data.
@@ -24793,10 +24797,10 @@ class WSCommandSPI extends WSCommandAbstract_1.WSCommandAbstract {
         if (miso === null) {
             miso = this.ioNotUsed;
         }
-        if (cs === null) {
+        if (typeof cs !== 'number') {
             cs = this.ioNotUsed;
         }
-        const buf = new Uint8Array(11);
+        const buf = new Uint8Array(12);
         buf[0] = module;
         buf[1] = mode;
         buf[2] = clk;
@@ -25282,6 +25286,7 @@ class WSCommandUart extends WSCommandAbstract_1.WSCommandAbstract {
         this._CommandDeinit = 1;
         this._CommandSend = 2;
         this._CommandRecv = 3;
+        this._CommandSetDE = 4;
     }
     // Commands
     init(params, module) {
@@ -25343,6 +25348,12 @@ class WSCommandUart extends WSCommandAbstract_1.WSCommandAbstract {
         buf.set(params.data, 1);
         this.sendCommand(this._CommandSend, buf);
     }
+    de(params, module) {
+        const buf = new Uint8Array(2);
+        buf[0] = module;
+        buf[1] = params.de;
+        this.sendCommand(this._CommandSetDE, buf);
+    }
     parseFromJson(json) {
         // 0~2
         for (let i = 0; i < 3; i++) {
@@ -25354,6 +25365,7 @@ class WSCommandUart extends WSCommandAbstract_1.WSCommandAbstract {
                 { uri: '/request/uart/init', onValid: this.init },
                 { uri: '/request/uart/send', onValid: this.send },
                 { uri: '/request/uart/deinit', onValid: this.deinit },
+                { uri: '/request/uart/de', onValid: this.de },
             ];
             const res = this.validateCommandSchema(schemaData, module, 'uart' + i, i);
             if (res.valid === 0) {
