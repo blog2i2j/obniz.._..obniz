@@ -163,6 +163,30 @@ export abstract class ObnizConnection extends EventEmitter<
   public firmware_ver?: string;
 
   /**
+   * This variable indicate installed plugin_name of target device
+   *
+   * ```javascript
+   * var obniz = new Obniz('1234-5678');
+   * obniz.onconnect = async function() {
+   *   console.log(obniz.plugin_name) // ex. "my_plugin"
+   * }
+   * ```
+   */
+  public plugin_name?: string;
+
+  /**
+   * This variable indicate installed boot reason of target device
+   *
+   * ```javascript
+   * var obniz = new Obniz('1234-5678');
+   * obniz.onconnect = async function() {
+   *   console.log(obniz.boot_reason) // ex. "DEEPSLEEP_RESET"
+   * }
+   * ```
+   */
+  public boot_reason?: string;
+
+  /**
    * Device metadata set on obniz cloud.
    *
    * ```javascript
@@ -1165,6 +1189,8 @@ export abstract class ObnizConnection extends EventEmitter<
     if (wsObj.ready) {
       const wsObniz = wsObj.obniz;
       this.firmware_ver = wsObniz.firmware;
+      this.plugin_name = wsObniz.plugin_name;
+      this.boot_reason = wsObniz.boot_reason;
       this.hw = wsObniz.hw;
       if (!this.hw) {
         this.hw = 'obnizb1';
