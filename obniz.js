@@ -335,6 +335,9 @@ var map = {
 	"./request/ioAnimation/changeState.yml": "./dist/src/json_schema/request/ioAnimation/changeState.yml",
 	"./request/ioAnimation/index.yml": "./dist/src/json_schema/request/ioAnimation/index.yml",
 	"./request/ioAnimation/init.yml": "./dist/src/json_schema/request/ioAnimation/init.yml",
+	"./request/location/deinit.yml": "./dist/src/json_schema/request/location/deinit.yml",
+	"./request/location/index.yml": "./dist/src/json_schema/request/location/index.yml",
+	"./request/location/init.yml": "./dist/src/json_schema/request/location/init.yml",
 	"./request/logicAnalyzer/deinit.yml": "./dist/src/json_schema/request/logicAnalyzer/deinit.yml",
 	"./request/logicAnalyzer/index.yml": "./dist/src/json_schema/request/logicAnalyzer/index.yml",
 	"./request/logicAnalyzer/init.yml": "./dist/src/json_schema/request/logicAnalyzer/init.yml",
@@ -429,6 +432,8 @@ var map = {
 	"./response/io/warning.yml": "./dist/src/json_schema/response/io/warning.yml",
 	"./response/ioanimation/index.yml": "./dist/src/json_schema/response/ioanimation/index.yml",
 	"./response/ioanimation/notify.yml": "./dist/src/json_schema/response/ioanimation/notify.yml",
+	"./response/location/index.yml": "./dist/src/json_schema/response/location/index.yml",
+	"./response/location/update.yml": "./dist/src/json_schema/response/location/update.yml",
 	"./response/logicanalyzer/data.yml": "./dist/src/json_schema/response/logicanalyzer/data.yml",
 	"./response/logicanalyzer/index.yml": "./dist/src/json_schema/response/logicanalyzer/index.yml",
 	"./response/measure/echo.yml": "./dist/src/json_schema/response/measure/echo.yml",
@@ -882,7 +887,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"},"location":{"$ref":"/request/location"}}}}
 
 /***/ }),
 
@@ -960,6 +965,27 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/ioAnimation/init","commandExample":{"io":{"animation":{"name":"animation-1","status":"loop","states":[{"duration":500,"state":{"io0":true}},{"duration":500,"state":{"io0":false}}]}}},"type":"object","required":["animation"],"properties":{"animation":{"type":"object","required":["name","status","states"],"additionalProperties":false,"properties":{"name":{"type":"string","minLength":1,"maxLength":254},"repeat":{"type":"integer","minLength":1,"maxLength":4294967295,"default":"undefined"},"status":{"type":"string","default":"loop","enum":["loop","registrate"]},"states":{"type":"array","default":[],"items":{"type":"object","required":["duration","state"],"additionalProperties":false,"properties":{"duration":{"type":"integer","minimum":0,"maximum":60000},"state":{"type":["object","array"],"filter":"pass_all"}}}}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/location/deinit.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/location/deinit","type":"null"}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/location/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/location","basePath":"location","anyOf":[{"$ref":"/request/location/init"},{"$ref":"/request/location/deinit"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/location/init.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/location/init","type":"object","required":["start"],"properties":{"start":{"type":"object","additionalProperties":false}}}
 
 /***/ }),
 
@@ -1575,7 +1601,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ "./dist/src/json_schema/response/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"location":{"$ref":"/request/location"}}}}
 
 /***/ }),
 
@@ -1618,6 +1644,20 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/ioAnimation/notify","type":"object","required":["animation"],"properties":{"animation":{"type":"object","required":["name","status"],"properties":{"name":{"type":"string","minLength":1,"maxLength":254},"status":{"type":"string","enum":["finish"]}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/location/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/location","basePath":"location","anyOf":[{"$ref":"/response/location/update"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/location/update.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/location/update","type":"object","properties":{"latitude":{"type":"number"},"longitude":{"type":"number"},"altitude":{"type":"number"},"accuracy":{"type":"number"},"speed":{"type":"number"}}}
 
 /***/ }),
 
@@ -2119,6 +2159,7 @@ const ObnizParts_1 = __webpack_require__("./dist/src/obniz/ObnizParts.js");
 const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
 const hw_1 = __webpack_require__("./dist/src/obniz/libs/hw/index.js");
 const grove_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/grove.js");
+const location_1 = __webpack_require__("./dist/src/obniz/libs/embeds/location.js");
 class ObnizComponents extends ObnizParts_1.ObnizParts {
     constructor(id, options) {
         super(id, options);
@@ -2286,6 +2327,7 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
             display: display_1.Display,
             switch: switch_1.ObnizSwitch,
             ble,
+            location: location_1.Location,
         };
         const protocol_map = {
             tcp: tcp_1.Tcp,
@@ -17439,6 +17481,51 @@ exports.Display = Display;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/embeds/location.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @packageDocumentation
+ * @module ObnizCore.Components
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Location = void 0;
+const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
+/**
+ * GPS/GNSS Service
+ *
+ * @category Embeds
+ */
+class Location extends ComponentAbstact_1.ComponentAbstract {
+    constructor(obniz, info) {
+        super(obniz);
+        this.on('/response/location/update', (obj) => {
+            this.Obniz._runUserCreatedFunction(this.onupdate, obj);
+        });
+        this._reset();
+    }
+    _reset() {
+        // No Need to reset
+    }
+    schemaBasePath() {
+        return 'location';
+    }
+    start() {
+        const obj = {
+            location: {
+                start: {},
+            },
+        };
+        this.Obniz.send(obj);
+    }
+}
+exports.Location = Location;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/embeds/switch.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -24706,6 +24793,79 @@ exports.WSCommandIO = WSCommandIO;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/wscommand/WSCommandLocation.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WSCommandLocation = void 0;
+/**
+ * @packageDocumentation
+ * @ignore
+ */
+const WSCommandAbstract_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandAbstract.js");
+class WSCommandLocation extends WSCommandAbstract_1.WSCommandAbstract {
+    constructor() {
+        super(...arguments);
+        this.module = 20;
+        this._CommandInit = 0;
+        this._CommandDeinit = 1;
+        this._CommandNotify = 2;
+    }
+    // Commands
+    init(params) {
+        const buf = new Uint8Array(0);
+        this.sendCommand(this._CommandInit, buf);
+    }
+    deinit(params) {
+        const buf = new Uint8Array(0);
+        this.sendCommand(this._CommandDeinit, buf);
+    }
+    parseFromJson(json) {
+        const module = json.location;
+        if (!module)
+            return;
+        const schemaData = [
+            { uri: '/request/location/init', onValid: this.init },
+            { uri: '/request/location/deinit', onValid: this.deinit },
+        ];
+        const res = this.validateCommandSchema(schemaData, module, 'location');
+        if (res.valid === 0) {
+            if (res.invalidButLike.length > 0) {
+                throw new Error(res.invalidButLike[0].message);
+            }
+            else {
+                throw new this.WSCommandNotFoundError('[location]unknown commnad');
+            }
+        }
+    }
+    notifyFromBinary(objToSend, func, payload) {
+        if (func === this._CommandNotify && payload.length === 4 * 5) {
+            const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+            const latitude = view.getFloat32(0, false);
+            const longitude = view.getFloat32(4, false);
+            const altitude = view.getFloat32(8, false);
+            const accuracy = view.getFloat32(12, false);
+            const speed = view.getFloat32(16, false);
+            objToSend.location = {
+                latitude,
+                longitude,
+                altitude,
+                accuracy,
+                speed,
+            };
+        }
+        else {
+            super.notifyFromBinary(objToSend, func, payload);
+        }
+    }
+}
+exports.WSCommandLocation = WSCommandLocation;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/wscommand/WSCommandLogicAnalyzer.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -26122,6 +26282,7 @@ const WSCommandSystem_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/W
 const WSCommandTcp_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandTcp.js");
 const WSCommandUart_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandUart.js");
 const WSCommandWiFi_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandWiFi.js");
+const WSCommandLocation_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandLocation.js");
 const WSCommandCANBus_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandCANBus.js");
 const commandClasses = {
     WSCommandSystem: WSCommandSystem_1.WSCommandSystem,
@@ -26141,6 +26302,7 @@ const commandClasses = {
     WSCommandWiFi: WSCommandWiFi_1.WSCommandWiFi,
     WSCommandPlugin: WSCommandPlugin_1.WSCommandPlugin,
     WSCommandCANBus: WSCommandCANBus_1.WSCommandCANBus,
+    WSCommandLocation: WSCommandLocation_1.WSCommandLocation,
 };
 const createCommandManager = () => {
     const instance = new WSCommandManager_1.WSCommandManager(commandClasses);

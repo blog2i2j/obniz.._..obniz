@@ -29,6 +29,7 @@ import { ComponentAbstract } from './libs/ComponentAbstact';
 import { HW } from './libs/hw';
 import { PeripheralGrove as PeripheralGrove } from './libs/io_peripherals/grove';
 import { ObnizOptions } from './ObnizOptions';
+import { Location } from './libs/embeds/location';
 
 export type PeripheralName = 'pwm' | 'uart' | 'spi' | 'i2c' | 'tcp';
 
@@ -234,6 +235,11 @@ export abstract class ObnizComponents extends ObnizParts {
    * @category Embeds
    */
   public switch?: ObnizSwitch;
+
+  /**
+   * @category Embeds
+   */
+  public location?: Location;
 
   /**
    * @category Peripherals
@@ -458,6 +464,7 @@ export abstract class ObnizComponents extends ObnizParts {
       display: Display,
       switch: ObnizSwitch,
       ble,
+      location: Location,
     };
 
     const protocol_map: any = {
