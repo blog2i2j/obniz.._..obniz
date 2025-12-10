@@ -31,6 +31,7 @@ import { PeripheralGrove as PeripheralGrove } from './libs/io_peripherals/grove'
 import { ObnizOptions } from './ObnizOptions';
 import { Motion } from './libs/embeds/motion';
 import { Location } from './libs/embeds/location';
+import { IntelligentEdgeKiloComponent } from './libs/hw/iekilo1_components';
 
 export type PeripheralName = 'pwm' | 'uart' | 'spi' | 'i2c' | 'tcp';
 
@@ -269,6 +270,11 @@ export abstract class ObnizComponents extends ObnizParts {
    * @category plugin
    */
   public plugin?: Plugin;
+
+  /**
+   * @category hardware specific components
+   */
+  public components?: IntelligentEdgeKiloComponent;
 
   protected _hwDefinition: any;
   protected _allComponentKeys: any;
@@ -541,6 +547,13 @@ export abstract class ObnizComponents extends ObnizParts {
           this._allComponentKeys.push(key);
         }
       }
+    }
+
+    // hw specific components
+    if (this.hw === 'iekilo1') {
+      this.components = new IntelligentEdgeKiloComponent(this as any);
+    } else {
+      delete this.components;
     }
   }
 

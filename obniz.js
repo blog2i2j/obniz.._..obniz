@@ -1953,6 +1953,7 @@ webpackEmptyContext.id = "./dist/src/obniz sync recursive";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Obniz = void 0;
 const m5stack_basic_1 = __webpack_require__("./dist/src/obniz/libs/hw/m5stack_basic.js");
+const iekilo1_components_1 = __webpack_require__("./dist/src/obniz/libs/hw/iekilo1_components.js");
 const m5stickc_1 = __webpack_require__("./dist/src/obniz/libs/hw/m5stickc.js");
 const ObnizApi_1 = __webpack_require__("./dist/src/obniz/ObnizApi.js");
 const ObnizApp_1 = __webpack_require__("./dist/src/obniz/ObnizApp.js");
@@ -2008,6 +2009,15 @@ exports.Obniz = Obniz;
  */
 Obniz.M5StickC = m5stickc_1.M5StickC;
 Obniz.M5StackBasic = m5stack_basic_1.M5StackBasic;
+/**
+ * types
+ */
+// eslint-disable-next-line no-redeclare
+// eslint-disable-next-line @typescript-eslint/no-namespace
+(function (Obniz) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    Obniz.KiloInterface = iekilo1_components_1.KiloInterface;
+})(Obniz = exports.Obniz || (exports.Obniz = {}));
 
 
 /***/ }),
@@ -2241,6 +2251,7 @@ const hw_1 = __webpack_require__("./dist/src/obniz/libs/hw/index.js");
 const grove_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/grove.js");
 const motion_1 = __webpack_require__("./dist/src/obniz/libs/embeds/motion.js");
 const location_1 = __webpack_require__("./dist/src/obniz/libs/embeds/location.js");
+const iekilo1_components_1 = __webpack_require__("./dist/src/obniz/libs/hw/iekilo1_components.js");
 class ObnizComponents extends ObnizParts_1.ObnizParts {
     constructor(id, options) {
         super(id, options);
@@ -2470,6 +2481,13 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
                     this._allComponentKeys.push(key);
                 }
             }
+        }
+        // hw specific components
+        if (this.hw === 'iekilo1') {
+            this.components = new iekilo1_components_1.IntelligentEdgeKiloComponent(this);
+        }
+        else {
+            delete this.components;
         }
     }
     _resetComponents() {
@@ -3328,6 +3346,8 @@ class ObnizConnection extends eventemitter3_1.default {
         if (wsObj.ready) {
             const wsObniz = wsObj.obniz;
             this.firmware_ver = wsObniz.firmware;
+            this.plugin_name = wsObniz.plugin_name;
+            this.boot_reason = wsObniz.boot_reason;
             this.hw = wsObniz.hw;
             if (!this.hw) {
                 this.hw = 'obnizb1';
@@ -17648,6 +17668,220 @@ exports.Location = Location;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/embeds/mcp23s08.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP23S08 = void 0;
+const mcp23s08_io_1 = __webpack_require__("./dist/src/obniz/libs/embeds/mcp23s08_io.js");
+class MCP23S08 {
+    constructor() {
+        this.ios = [];
+        this.keys = ['vcc', 'gnd', 'frequency', 'mosi', 'miso', 'clk', 'spi', 'cs'];
+        this.requiredKeys = ['cs'];
+    }
+    wired(obniz, spi) {
+        this.obniz = obniz;
+        this.spi = spi;
+        this.readSlaveAddress = 0b01000001;
+        this.writeSlaveAddress = 0b01000000;
+        this.ios = [];
+        for (let i = 0; i < 8; i++) {
+            const io = new mcp23s08_io_1.MCP23S08_IO(this, i);
+            this.ios.push(io);
+            this['io' + i] = io;
+        }
+    }
+    /**
+     * Initialize all ios. set direction=input.
+     */
+    async initWait(obniz) {
+        await this.writeWait(MCP23S08.MCP23S08_REGISTER.IODIR, 0xff); // input
+        for (let i = MCP23S08.MCP23S08_REGISTER.IPOL; i <= MCP23S08.MCP23S08_REGISTER.OLAT; i++) {
+            await this.writeWait(i, 0x00);
+        }
+        await this.flushWait('direction');
+        await this.flushWait('gpio');
+    }
+    /**
+     * Read byte from address
+     *
+     * @param address internal register address
+     * @returns readed value of address
+     */
+    async readWait(address) {
+        await this.spi.writeWait([this.readSlaveAddress, address]);
+        const ret = await this.spi.writeWait([0x00]);
+        return ret[0];
+    }
+    /**
+     * Write byte to address. It will wait until success response receive
+     *
+     * @param address internal register address
+     * @param data
+     */
+    async writeWait(address, data) {
+        await this.spi.writeWait([this.writeSlaveAddress, address, data]);
+    }
+    /**
+     * Write byte to address without wait.
+     *
+     * @param address internal register address
+     * @param data
+     */
+    write(address, data) {
+        this.spi.write([this.writeSlaveAddress, address, data]);
+    }
+    /**
+     * Bulk write to addresses
+     *
+     * @param address start address
+     * @param data
+     */
+    async writeBulkWait(address, data) {
+        await this.spi.writeWait([this.writeSlaveAddress, address, ...data]);
+    }
+    /**
+     * set output value for io. It will apply immidiately.
+     * This function never change direction. set direction output before.
+     * If you want to hold some changes and flush once.
+     * ```
+     * use following examle steps
+     * this.io0.value = true;
+     * this.io1.value = true;
+     * this.flush("gpio");
+     * ```
+     *
+     * @param id io address. 0-7
+     * @param value boolean. true or false
+     */
+    output(id, value) {
+        value = value === true;
+        this.ios[id].value = value;
+        this.flush();
+    }
+    /**
+     * async version of output();
+     *
+     * @param id
+     * @param value
+     */
+    async outputWait(id, value) {
+        value = value === true;
+        this.ios[id].value = value;
+        await this.flushWait();
+    }
+    /**
+     * Read current all GPIO value.
+     */
+    async readAllGPIOWait() {
+        const ret = await this.readWait(MCP23S08.MCP23S08_REGISTER.GPIO);
+        for (let i = 0; i < 8; i++) {
+            if (this.ios[i].direction === MCP23S08.MCP23S08_IO_DIRECTION.INPUT) {
+                this.ios[i].value = (ret & (1 << i)) !== 0;
+            }
+        }
+    }
+    /**
+     * Read current all GPIO value and return single io value.
+     *
+     * @param id io 0-7
+     * @returns GPIO value
+     */
+    async inputWait(id) {
+        await this.readAllGPIOWait();
+        return this.ios[id].value;
+    }
+    async flushWait(type = 'gpio') {
+        const keys = {
+            gpio: { key: 'value', address: MCP23S08.MCP23S08_REGISTER.GPIO },
+            direction: {
+                key: 'direction',
+                address: MCP23S08.MCP23S08_REGISTER.IODIR,
+            },
+        };
+        const key = keys[type].key;
+        const address = keys[type].address;
+        let value = 0;
+        for (let i = 0; i < 8; i++) {
+            if (this.ios[i][key]) {
+                value = value | (1 << i);
+            }
+        }
+        await this.writeWait(address, value);
+    }
+    flush(type = 'gpio') {
+        const keys = {
+            gpio: { key: 'value', address: MCP23S08.MCP23S08_REGISTER.GPIO },
+            direction: {
+                key: 'direction',
+                address: MCP23S08.MCP23S08_REGISTER.IODIR,
+            },
+        };
+        const key = keys[type].key;
+        const address = keys[type].address;
+        let value = 0;
+        for (let i = 0; i < 8; i++) {
+            if (this.ios[i][key]) {
+                value = value | (1 << i);
+            }
+        }
+        this.write(address, value);
+    }
+}
+exports.MCP23S08 = MCP23S08;
+MCP23S08.MCP23S08_IO_DIRECTION = {
+    OUTPUT: false,
+    INPUT: true,
+};
+MCP23S08.MCP23S08_REGISTER = {
+    IODIR: 0x00,
+    IPOL: 0x01,
+    GPINTEN: 0x02,
+    DEFVAL: 0x03,
+    INTCON: 0x04,
+    IOCON: 0x05,
+    GPPU: 0x06,
+    INTF: 0x07,
+    INTCAP: 0x08,
+    GPIO: 0x09,
+    OLAT: 0x0a,
+};
+
+
+/***/ }),
+
+/***/ "./dist/src/obniz/libs/embeds/mcp23s08_io.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP23S08_IO = void 0;
+class MCP23S08_IO {
+    constructor(chip, id) {
+        this.chip = chip;
+        this.id = id;
+        this.value = false;
+        this.direction = true; // true is input. false is output
+    }
+    output(value) {
+        this.chip.output(this.id, value);
+    }
+    async outputWait(value) {
+        await this.chip.outputWait(this.id, value);
+    }
+    async inputWait(obniz) {
+        return await this.chip.inputWait(this.id);
+    }
+}
+exports.MCP23S08_IO = MCP23S08_IO;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/embeds/motion.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -17875,7 +18109,7 @@ exports.ObnizSwitch = ObnizSwitch;
 /***/ "./dist/src/obniz/libs/hw/blelte_gw2.json":
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"encored_lte\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"2\":{},\"4\":{},\"16\":{},\"17\":{},\"18\":{},\"19\":{},\"21\":{},\"25\":{},\"26\":{},\"33\":{}}},\"ad\":{\"units\":{}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{},\"1\":{}}},\"i2c\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
+module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"encored_lte\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"2\":{},\"4\":{},\"16\":{},\"17\":{},\"18\":{},\"19\":{},\"21\":{},\"25\":{},\"26\":{},\"33\":{}}},\"ad\":{\"units\":{}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{},\"1\":{}}},\"i2c\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true},\"storage\":{}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
 
 /***/ }),
 
@@ -17907,20 +18141,6 @@ module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"encored_lte\",\"peripherals
 
 /***/ }),
 
-/***/ "./dist/src/obniz/libs/hw/esp32c3.json":
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"esp32c3\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"18\":{},\"19\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}}},\"embeds\":{\"ble\":{\"extended\":true}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
-
-/***/ }),
-
-/***/ "./dist/src/obniz/libs/hw/esp32c6.json":
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"esp32c6\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"11\":{},\"12\":{},\"13\":{},\"15\":{},\"18\":{},\"19\":{},\"20\":{},\"21\":{},\"22\":{},\"23\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}},\"canbus\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
-
-/***/ }),
-
 /***/ "./dist/src/obniz/libs/hw/esp32p.json":
 /***/ (function(module) {
 
@@ -17938,14 +18158,202 @@ module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"esp32w\",\"peripherals\":{\
 /***/ "./dist/src/obniz/libs/hw/iekilo1.json":
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"iekilo1\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"11\":{},\"12\":{},\"13\":{},\"15\":{},\"18\":{},\"19\":{},\"20\":{},\"21\":{},\"22\":{},\"23\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}},\"canbus\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true},\"motion\":{},\"location\":{}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
+module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"iekilo1\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"11\":{},\"12\":{},\"13\":{},\"15\":{},\"18\":{},\"19\":{},\"20\":{},\"21\":{},\"22\":{},\"23\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}},\"canbus\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true},\"motion\":{},\"location\":{},\"storage\":{}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
+
+/***/ }),
+
+/***/ "./dist/src/obniz/libs/hw/iekilo1_components.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @packageDocumentation
+ * @module ObnizCore.Hardware
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IntelligentEdgeKiloComponent = exports.KiloInterface = void 0;
+const mcp23s08_1 = __webpack_require__("./dist/src/obniz/libs/embeds/mcp23s08.js");
+var KiloInterface;
+(function (KiloInterface) {
+    KiloInterface[KiloInterface["None"] = 0] = "None";
+    KiloInterface[KiloInterface["Relay_On"] = 1] = "Relay_On";
+    KiloInterface[KiloInterface["RS232_On"] = 2] = "RS232_On";
+    KiloInterface[KiloInterface["RS485_On"] = 4] = "RS485_On";
+    KiloInterface[KiloInterface["CANBus_On"] = 8] = "CANBus_On";
+})(KiloInterface = exports.KiloInterface || (exports.KiloInterface = {}));
+class IntelligentEdgeKiloComponent {
+    constructor(obniz) {
+        this.isDirectionFlashed = false;
+        this.RS232_TX = 3;
+        this.RS232_RX = 4;
+        this.RS485_TX = 4;
+        this.RS485_RX = 3;
+        this.RS485_DE = 7;
+        this.CANBUS_TX = 5;
+        this.CANBUS_RX = 6;
+        this.obniz = obniz;
+    }
+    prepare() {
+        if (this.obniz.hw !== 'iekilo1') {
+            throw new Error('Obniz.IntelligentEdgeKilo only support ObnizOS for Intelligent Edge Kilo Your device is not ObnizOS for Intelligent Edge Kilo.');
+        }
+        const firstTime = !this.mcp23s08;
+        const reconnected = this.mcp23s08 && this.obniz.spi0.isUsed() === false;
+        if (firstTime || reconnected) {
+            const spi = this.obniz.spi0;
+            spi.start({
+                mode: 'master',
+                mosi: 20,
+                miso: 21,
+                clk: 19,
+                cs: 8,
+                frequency: 100 * 1000,
+            });
+            this.mcp23s08 = new mcp23s08_1.MCP23S08();
+            this.mcp23s08.wired(this.obniz, spi);
+            // Initial values
+            this.mcp23s08.io0.value = false;
+            this.mcp23s08.io1.value = false;
+            this.mcp23s08.io2.value = true;
+            this.mcp23s08.io3.value = true;
+            this.mcp23s08.io4.value = true;
+            this.mcp23s08.io5.value = false;
+        }
+    }
+    /**
+     * Powering on Each Interface.
+     * RS232, RS485, CANBus, Relay. But RS232 and RS485 cannot be enabled at the same time.
+     *
+     * @param mode Powring on each interface.
+     */
+    powerOnInterface(mode) {
+        const mcp = this.mcp23s08;
+        const is232On = mcp.io1.value === true;
+        const is485On = mcp.io3.value === false;
+        if (is232On && (mode & KiloInterface.RS485_On) !== 0) {
+            throw new Error('RS232 and RS485 cannot be enabled at the same time');
+        }
+        if (is485On && (mode & KiloInterface.RS232_On) !== 0) {
+            throw new Error('RS232 and RS485 cannot be enabled at the same time');
+        }
+        // IO0: RS232FORCEON H: normal operation without autodown
+        // IO1: RS232FORCEOFF L: PowerOFF H: Operation
+        // IO2: RS232EN  L: Operation H:OFF
+        // IO3: 485RE   L: work H: Standby
+        // IO4: CANSTBY L: work H: Standby
+        // IO5: RELAY
+        // IO6: x
+        // IO7: (input)RS232INV
+        if (!this.isDirectionFlashed) {
+            // Everything Off State
+            mcp.io0.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io1.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io2.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io3.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io4.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io5.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.OUTPUT;
+            mcp.io6.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.INPUT;
+            mcp.io7.direction = mcp23s08_1.MCP23S08.MCP23S08_IO_DIRECTION.INPUT;
+            mcp.flush('direction'); // or mcp.flush("direction"); for no wait.
+            this.isDirectionFlashed = true;
+        }
+        if (mode & KiloInterface.Relay_On) {
+            mcp.io5.value = true;
+        }
+        // rs485 recevei Enable
+        if (mode & KiloInterface.RS485_On) {
+            mcp.io0.value = false;
+            mcp.io1.value = false;
+            mcp.io2.value = true;
+            mcp.io3.value = false;
+        }
+        else if (mode & KiloInterface.RS232_On) {
+            mcp.io0.value = true;
+            mcp.io1.value = true;
+            mcp.io2.value = false;
+            mcp.io3.value = true;
+        }
+        // CAN Enable
+        if (mode & KiloInterface.CANBus_On) {
+            mcp.io4.value = false;
+        }
+        // flash
+        mcp.flush('gpio'); // or mcp.flush("direction"); for no wait.
+    }
+    /**
+     * Powering off all interfaces.
+     */
+    powerOffAllInterfaces() {
+        const mcp = this.mcp23s08;
+        mcp.io0.value = false;
+        mcp.io1.value = false;
+        mcp.io2.value = true;
+        mcp.io3.value = true;
+        mcp.io4.value = true;
+        mcp.io5.value = false;
+        mcp.flush('gpio'); // or mcp.flush("direction"); for no wait.
+    }
+    /**
+     * Check RS232 is having 232 leve linput.
+     * Attention! This function never works with FORCE ON. this is standard situation.
+     *
+     * @returns true: RS232 is having rs232 leve signal. false: RS232 is not having target wait.
+     */
+    async isRS232HavingTargetWait() {
+        const mcp = this.mcp23s08;
+        await mcp.readAllGPIOWait();
+        return mcp.io7.value;
+    }
+    /**
+     * Conversion method from ad0 voltage to input supply voltage.
+     *
+     * @param inputVoltage ad0 voltage.
+     * @returns Input Supply Voltage.
+     */
+    inputVoltageToVoltage(inputVoltage) {
+        return parseFloat(((inputVoltage / 11.0) * 111.0).toFixed(3));
+    }
+    /**
+     * Step is 8.12mV(12bit)
+     * voltage. measurable range is 0 to 33.3v.
+     */
+    startMonitoringPowerSupply(callbaack) {
+        // 100kohm + 11kohm for 1%.
+        this.obniz.ad0.start((ad0Level) => {
+            const inputVoltage = this.inputVoltageToVoltage(ad0Level);
+            callbaack(inputVoltage);
+        });
+    }
+    /**
+     * Step is 8.12mV(12bit)
+     *
+     * @returns voltage. measurable range is 0 to 33.3v.
+     */
+    async getPowerSupplyVoltageWait() {
+        const ad0Level = await this.obniz.ad0.getWait();
+        return this.inputVoltageToVoltage(ad0Level);
+    }
+    /**
+     * Setting relay state.
+     *
+     * @param state true for on.
+     */
+    setRelay(state) {
+        const mcp = this.mcp23s08;
+        mcp.io5.value = state;
+        mcp.flush('gpio');
+    }
+}
+exports.IntelligentEdgeKiloComponent = IntelligentEdgeKiloComponent;
+
 
 /***/ }),
 
 /***/ "./dist/src/obniz/libs/hw/iemicro1.json":
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"iemicro1\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"11\":{},\"12\":{},\"13\":{},\"15\":{},\"18\":{},\"19\":{},\"20\":{},\"21\":{},\"22\":{},\"23\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}},\"canbus\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true},\"motion\":{},\"location\":{}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
+module.exports = JSON.parse("{\"rev\":\"2\",\"hw\":\"iemicro1\",\"peripherals\":{\"io\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{},\"10\":{},\"11\":{},\"12\":{},\"13\":{},\"15\":{},\"18\":{},\"19\":{},\"20\":{},\"21\":{},\"22\":{},\"23\":{}}},\"ad\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{}}},\"pwm\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{}}},\"uart\":{\"units\":{\"0\":{},\"1\":{}}},\"spi\":{\"units\":{\"0\":{}}},\"i2c\":{\"units\":{\"0\":{},\"1\":{}}},\"canbus\":{\"units\":{\"0\":{}}}},\"embeds\":{\"ble\":{\"extended\":true},\"motion\":{},\"location\":{},\"storage\":{}},\"protocol\":{\"tcp\":{\"units\":{\"0\":{},\"1\":{},\"2\":{},\"3\":{},\"4\":{},\"5\":{},\"6\":{},\"7\":{}}}},\"network\":{\"wifi\":{}},\"extraInterface\":{}}");
 
 /***/ }),
 
@@ -17990,10 +18398,10 @@ class HW {
             return __webpack_require__("./dist/src/obniz/libs/hw/cc3235mod.json");
         }
         else if (hw === 'esp32c3') {
-            return __webpack_require__("./dist/src/obniz/libs/hw/esp32c3.json");
+            return __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module './esp32c3.json'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
         }
         else if (hw === 'esp32c6') {
-            return __webpack_require__("./dist/src/obniz/libs/hw/esp32c6.json");
+            return __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module './esp32c6.json'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
         }
         else if (hw === 'iemicro1') {
             return __webpack_require__("./dist/src/obniz/libs/hw/iemicro1.json");
