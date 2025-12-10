@@ -23,10 +23,6 @@ export class HW {
       return require('./encored_lte.json');
     } else if (hw === 'cc3235mod') {
       return require('./cc3235mod.json');
-    } else if (hw === 'esp32c3') {
-      return require('./esp32c3.json');
-    } else if (hw === 'esp32c6') {
-      return require('./esp32c6.json');
     } else if (hw === 'iemicro1') {
       return require('./iemicro1.json');
     } else if (hw === 'iekilo1') {

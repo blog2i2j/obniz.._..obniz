@@ -360,6 +360,9 @@ var map = {
 	"./request/spi/index.yml": "./dist/src/json_schema/request/spi/index.yml",
 	"./request/spi/init_master.yml": "./dist/src/json_schema/request/spi/init_master.yml",
 	"./request/spi/write.yml": "./dist/src/json_schema/request/spi/write.yml",
+	"./request/storage/index.yml": "./dist/src/json_schema/request/storage/index.yml",
+	"./request/storage/read.yml": "./dist/src/json_schema/request/storage/read.yml",
+	"./request/storage/save.yml": "./dist/src/json_schema/request/storage/save.yml",
 	"./request/switch/get.yml": "./dist/src/json_schema/request/switch/get.yml",
 	"./request/switch/index.yml": "./dist/src/json_schema/request/switch/index.yml",
 	"./request/system/index.yml": "./dist/src/json_schema/request/system/index.yml",
@@ -454,6 +457,8 @@ var map = {
 	"./response/plugin/receive.yml": "./dist/src/json_schema/response/plugin/receive.yml",
 	"./response/spi/index.yml": "./dist/src/json_schema/response/spi/index.yml",
 	"./response/spi/read.yml": "./dist/src/json_schema/response/spi/read.yml",
+	"./response/storage/index.yml": "./dist/src/json_schema/response/storage/index.yml",
+	"./response/storage/read.yml": "./dist/src/json_schema/response/storage/read.yml",
 	"./response/switch/change.yml": "./dist/src/json_schema/response/switch/change.yml",
 	"./response/switch/index.yml": "./dist/src/json_schema/response/switch/index.yml",
 	"./response/system/index.yml": "./dist/src/json_schema/response/system/index.yml",
@@ -897,7 +902,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"},"motion":{"$ref":"/request/motion"},"location":{"$ref":"/request/location"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"},"storage":{"$ref":"/request/storage"},"motion":{"$ref":"/request/motion"},"location":{"$ref":"/request/location"}}}}
 
 /***/ }),
 
@@ -1150,6 +1155,27 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/spi/write","related":"/response/spi/read","type":"object","required":["data","read"],"properties":{"data":{"$ref":"/dataArray1024"},"read":{"type":"boolean","default":true}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/storage/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/storage","basePath":"storage","anyOf":[{"$ref":"/request/storage/save"},{"$ref":"/request/storage/read"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/storage/read.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/storage/read","related":"/response/storage/read","desription":"Read file data by file name from obniz storage.","type":"object","required":["read"],"properties":{"read":{"type":"object","required":["fileName"],"properties":{"fileName":{"type":"string"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/storage/save.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/storage/save","type":"object","required":["save"],"properties":{"save":{"type":"object","required":["fileName","data"],"properties":{"fileName":{"type":"string"},"data":{"$ref":"/dataArray"}}}}}
 
 /***/ }),
 
@@ -1646,7 +1672,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ "./dist/src/json_schema/response/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"motion":{"$ref":"/response/motion"},"location":{"$ref":"/response/location"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"storage":{"$ref":"/response/storage"},"motion":{"$ref":"/response/motion"},"location":{"$ref":"/response/location"}}}}
 
 /***/ }),
 
@@ -1808,6 +1834,20 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/spi/read","type":"object","required":["data"],"properties":{"data":{"$ref":"/dataArray"}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/storage/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/storage","basePath":"storage","anyOf":[{"$ref":"/response/storage/read"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/storage/read.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/storage/read","type":"object","required":["read"],"properties":{"read":{"$ref":"/dataArray"}}}
 
 /***/ }),
 
@@ -2249,6 +2289,7 @@ const ObnizParts_1 = __webpack_require__("./dist/src/obniz/ObnizParts.js");
 const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
 const hw_1 = __webpack_require__("./dist/src/obniz/libs/hw/index.js");
 const grove_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/grove.js");
+const storage_1 = __webpack_require__("./dist/src/obniz/libs/embeds/storage.js");
 const motion_1 = __webpack_require__("./dist/src/obniz/libs/embeds/motion.js");
 const location_1 = __webpack_require__("./dist/src/obniz/libs/embeds/location.js");
 const iekilo1_components_1 = __webpack_require__("./dist/src/obniz/libs/hw/iekilo1_components.js");
@@ -2418,6 +2459,7 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
             display: display_1.Display,
             switch: switch_1.ObnizSwitch,
             ble,
+            storage: storage_1.Storage,
             motion: motion_1.Motion,
             location: location_1.Location,
         };
@@ -18021,6 +18063,80 @@ exports.Motion = Motion;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/embeds/storage.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Storage = void 0;
+const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
+const semver_1 = __importDefault(__webpack_require__("./node_modules/semver/semver.js"));
+class Storage extends ComponentAbstact_1.ComponentAbstract {
+    schemaBasePath() {
+        return 'storage';
+    }
+    _reset() {
+        // What should I do?
+    }
+    constructor(obniz, info) {
+        super(obniz);
+    }
+    save(fileName, data) {
+        if (semver_1.default.major(this.Obniz.firmware_ver) < 4) {
+            throw new Error(`Please update obniz firmware >= 4.0.0`);
+        }
+        const obj = {
+            storage: {
+                save: {
+                    fileName,
+                    data,
+                },
+            },
+        };
+        this.Obniz.send(obj);
+    }
+    savePluginLua(lua_script) {
+        if (semver_1.default.major(this.Obniz.firmware_ver) < 7) {
+            throw new Error(`Please update obniz firmware >= 7.0.0`);
+        }
+        let send_data = null;
+        if (this.Obniz.isNode && lua_script instanceof Buffer) {
+            send_data = [...lua_script];
+        }
+        else if (lua_script.constructor === Array) {
+            send_data = lua_script;
+        }
+        else if (typeof lua_script === 'string') {
+            const buf = Buffer.from(lua_script);
+            send_data = [...buf];
+        }
+        if (!send_data) {
+            throw new Error(`no correct lua_script supplied`);
+        }
+        this.save('plua', send_data);
+    }
+    async readWait(fileName) {
+        const obj = {
+            storage: {
+                read: {
+                    fileName,
+                },
+            },
+        };
+        const json = await this.sendAndReceiveJsonWait(obj, '/response/storage/read');
+        return json.read;
+    }
+}
+exports.Storage = Storage;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__("./node_modules/buffer/index.js").Buffer))
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/embeds/switch.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -18396,12 +18512,6 @@ class HW {
         }
         else if (hw === 'cc3235mod') {
             return __webpack_require__("./dist/src/obniz/libs/hw/cc3235mod.json");
-        }
-        else if (hw === 'esp32c3') {
-            return __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module './esp32c3.json'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
-        }
-        else if (hw === 'esp32c6') {
-            return __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module './esp32c6.json'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
         }
         else if (hw === 'iemicro1') {
             return __webpack_require__("./dist/src/obniz/libs/hw/iemicro1.json");
@@ -26388,6 +26498,99 @@ exports.WSCommandSPI = WSCommandSPI;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/wscommand/WSCommandStorage.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WSCommandStorage = void 0;
+const WSCommandAbstract_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandAbstract.js");
+class WSCommandStorage extends WSCommandAbstract_1.WSCommandAbstract {
+    constructor() {
+        super(...arguments);
+        this.module = 17;
+        this._CommandSave = 0;
+        this._CommandRead = 1;
+    }
+    // public _CommandErase = 2; // TODO: Implement this in the future.
+    save(json) {
+        // request payload format
+        // length of filename | filename | data
+        const { fileName, data } = json.save;
+        const buf = Buffer.from(fileName);
+        const fileNameUintArr = new Uint8Array(buf);
+        const joined = new Uint8Array(1 /* this 1 byte indicates length of filename */ +
+            fileNameUintArr.length +
+            data.length);
+        const iLenFileName = 0;
+        const iFileName = iLenFileName + 1;
+        const iData = iFileName + fileNameUintArr.length;
+        joined.set(new Uint8Array([fileNameUintArr.length]), iLenFileName);
+        joined.set(fileNameUintArr, iFileName);
+        joined.set(data, iData);
+        this.sendCommand(this._CommandSave, joined);
+    }
+    read(json) {
+        // request payload format
+        // length of filename | filename
+        const { fileName } = json.read;
+        const buf = Buffer.from(fileName);
+        const fileNameUintArr = new Uint8Array(buf);
+        const joined = new Uint8Array(1 /* this 1 byte indicates length of filename */ + fileNameUintArr.length);
+        const iLenFileName = 0;
+        const iFileName = iLenFileName + 1;
+        joined.set(new Uint8Array([fileNameUintArr.length]), iLenFileName);
+        joined.set(fileNameUintArr, iFileName);
+        this.sendCommand(this._CommandRead, joined);
+    }
+    parseFromJson(json) {
+        const module = json.storage;
+        if (!module)
+            return;
+        const schemaData = [
+            { uri: '/request/storage/save', onValid: this.save },
+            { uri: '/request/storage/read', onValid: this.read },
+        ];
+        const res = this.validateCommandSchema(schemaData, module, 'storage');
+        if (res.valid === 0) {
+            if (res.invalidButLike.length > 0) {
+                throw new Error(res.invalidButLike[0].message);
+            }
+            else {
+                throw new this.WSCommandNotFoundError('[storage]unknown commnad');
+            }
+        }
+    }
+    notifyFromBinary(objToSend, func, payload) {
+        switch (func) {
+            case this._CommandSave: {
+                super.notifyFromBinary(objToSend, func, payload);
+                break;
+            }
+            case this._CommandRead: {
+                // parse binary and build up json out of it
+                // binary format: lenFileName | bytesFileName | bytesData
+                const lenFileName = payload[0];
+                const bytesFileName = payload.slice(1, lenFileName + 1);
+                const uBytesData = payload.slice(1 + bytesFileName.length);
+                objToSend.storage = {
+                    read: Array.from(uBytesData),
+                };
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+}
+exports.WSCommandStorage = WSCommandStorage;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__("./node_modules/buffer/index.js").Buffer))
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/wscommand/WSCommandSwitch.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -27150,6 +27353,7 @@ const WSCommandSystem_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/W
 const WSCommandTcp_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandTcp.js");
 const WSCommandUart_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandUart.js");
 const WSCommandWiFi_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandWiFi.js");
+const WSCommandStorage_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandStorage.js");
 const WSCommandMotion_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandMotion.js");
 const WSCommandLocation_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandLocation.js");
 const WSCommandCANBus_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandCANBus.js");
@@ -27173,6 +27377,7 @@ const commandClasses = {
     WSCommandCANBus: WSCommandCANBus_1.WSCommandCANBus,
     WSCommandLocation: WSCommandLocation_1.WSCommandLocation,
     WSCommandMotion: WSCommandMotion_1.WSCommandMotion,
+    WSCommandStorage: WSCommandStorage_1.WSCommandStorage,
 };
 const createCommandManager = () => {
     const instance = new WSCommandManager_1.WSCommandManager(commandClasses);
