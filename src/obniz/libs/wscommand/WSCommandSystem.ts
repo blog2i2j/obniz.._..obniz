@@ -21,6 +21,10 @@ export class WSCommandSystem extends WSCommandAbstract {
   _CommandSleepIoTrigger = 12;
   _CommandUpdatePingCheckInterval = 18;
 
+  _CommandNotifyTimeStamp = 20;
+  _CommandSetQueueMode = 21;
+  _CommandSetClock = 22;
+
   // Commands
 
   public reboot() {
@@ -103,7 +107,11 @@ export class WSCommandSystem extends WSCommandAbstract {
       { uri: '/request/system/sleepSeconds', onValid: this.sleepSeconds },
       { uri: '/request/system/sleepMinute', onValid: this.sleepMinute },
       { uri: '/request/system/sleepIoTrigger', onValid: this.sleepIoTrigger },
+
+      { uri: '/request/system/queue_mode', onValid: this.setQueueMode },
+      { uri: '/request/system/set_clock', onValid: this.setClock },
     ];
+
     const res = this.validateCommandSchema(schemaData, module, 'system');
 
     if (res.valid === 0) {
@@ -173,6 +181,9 @@ export class WSCommandSystem extends WSCommandAbstract {
         this.pong(objToSend, payload);
 
         break;
+      case this._CommandNotifyTimeStamp:
+        this.timestamp(objToSend, payload);
+        break;
 
       default:
         super.notifyFromBinary(objToSend, func, payload);
@@ -197,5 +208,46 @@ export class WSCommandSystem extends WSCommandAbstract {
     const triggerNum = trigger === true ? 1 : 0;
     const buf = new Uint8Array([triggerNum]);
     this.sendCommand(this._CommandSleepIoTrigger, buf);
+  }
+
+  public setQueueMode(params: {
+    queue_mode: { interval: number; timestamp: string };
+  }) {
+    const interval = params.queue_mode.interval;
+    const timestamp = params.queue_mode.timestamp;
+    const buf = new Uint8Array(9);
+
+    buf[0] = 0;
+    if (timestamp === 'none') {
+      buf[0] = 0;
+    } else if (timestamp === 'unix_seconds') {
+      buf[0] = 1;
+    } else if (timestamp === 'unix_milliseconds') {
+      buf[0] = 2;
+    }
+    // interval
+    buf[1] = interval >> (8 * 3);
+    buf[2] = interval >> (8 * 2);
+    buf[3] = interval >> (8 * 1);
+    buf[4] = interval >> (8 * 0);
+
+    this.sendCommand(this._CommandSetQueueMode, buf);
+  }
+
+  public setClock(params: { clock: number }) {
+    const unixtime = params.clock;
+    const buf = new Uint8Array(8);
+    const upper = Math.floor(unixtime / Math.pow(2, 32));
+    const lower = unixtime - upper * Math.pow(2, 32);
+    buf[0] = upper >> (8 * 3);
+    buf[1] = upper >> (8 * 2);
+    buf[2] = upper >> (8 * 1);
+    buf[3] = upper >> (8 * 0);
+    buf[4] = lower >> (8 * 3);
+    buf[5] = lower >> (8 * 2);
+    buf[6] = lower >> (8 * 1);
+    buf[7] = lower >> (8 * 0);
+
+    this.sendCommand(this._CommandSetClock, buf);
   }
 }

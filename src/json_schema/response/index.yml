@@ -30,4 +30,4 @@ items:
     ws: {$ref: "/response/ws"}
     wifi: {$ref: "/response/wifi"}
     plugin: {$ref: "/response/plugin"}
-    location: {$ref: "/request/location" }
+    location: {$ref: "/response/location"}

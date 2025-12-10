@@ -362,9 +362,11 @@ var map = {
 	"./request/system/index.yml": "./dist/src/json_schema/request/system/index.yml",
 	"./request/system/keep_working_at_offline.yml": "./dist/src/json_schema/request/system/keep_working_at_offline.yml",
 	"./request/system/ping.yml": "./dist/src/json_schema/request/system/ping.yml",
+	"./request/system/queue_mode.yml": "./dist/src/json_schema/request/system/queue_mode.yml",
 	"./request/system/reboot.yml": "./dist/src/json_schema/request/system/reboot.yml",
 	"./request/system/reset.yml": "./dist/src/json_schema/request/system/reset.yml",
 	"./request/system/self_check.yml": "./dist/src/json_schema/request/system/self_check.yml",
+	"./request/system/set_clock.yml": "./dist/src/json_schema/request/system/set_clock.yml",
 	"./request/system/sleep_io_trigger.yml": "./dist/src/json_schema/request/system/sleep_io_trigger.yml",
 	"./request/system/sleep_minute.yml": "./dist/src/json_schema/request/system/sleep_minute.yml",
 	"./request/system/sleep_seconds.yml": "./dist/src/json_schema/request/system/sleep_seconds.yml",
@@ -449,6 +451,7 @@ var map = {
 	"./response/switch/index.yml": "./dist/src/json_schema/response/switch/index.yml",
 	"./response/system/index.yml": "./dist/src/json_schema/response/system/index.yml",
 	"./response/system/pong.yml": "./dist/src/json_schema/response/system/pong.yml",
+	"./response/system/timestamp.yml": "./dist/src/json_schema/response/system/timestamp.yml",
 	"./response/tcp/connect.yml": "./dist/src/json_schema/response/tcp/connect.yml",
 	"./response/tcp/connection.yml": "./dist/src/json_schema/response/tcp/connection.yml",
 	"./response/tcp/index.yml": "./dist/src/json_schema/response/tcp/index.yml",
@@ -1139,7 +1142,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/system/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system","basePath":"system","anyOf":[{"$ref":"/request/system/wait"},{"$ref":"/request/system/reset"},{"$ref":"/request/system/reboot"},{"$ref":"/request/system/selfCheck"},{"$ref":"/request/system/keepWorkingAtOffline"},{"$ref":"/request/system/ping"},{"$ref":"/request/system/sleepSeconds"},{"$ref":"/request/system/sleepMinute"},{"$ref":"/request/system/sleepIoTrigger"}]}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system","basePath":"system","anyOf":[{"$ref":"/request/system/wait"},{"$ref":"/request/system/reset"},{"$ref":"/request/system/reboot"},{"$ref":"/request/system/selfCheck"},{"$ref":"/request/system/keepWorkingAtOffline"},{"$ref":"/request/system/ping"},{"$ref":"/request/system/sleepSeconds"},{"$ref":"/request/system/sleepMinute"},{"$ref":"/request/system/sleepIoTrigger"},{"$ref":"/request/system/set_clock"},{"$ref":"/request/system/queue_mode"}]}
 
 /***/ }),
 
@@ -1154,6 +1157,13 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system/ping","response":"/response/system/pong","type":"object","required":["ping"],"properties":{"ping":{"type":"object","required":["key"],"properties":{"key":{"$ref":"/dataArray"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/system/queue_mode.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system/queue_mode","type":"object","required":["queue_mode"],"properties":{"queue_mode":{"type":"object","properties":{"interval":{"type":"integer"},"timestamp":{"type":"string","enum":["none","unix_seconds","unix_milliseconds"]}}}}}
 
 /***/ }),
 
@@ -1175,6 +1185,13 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system/selfCheck","type":"object","required":["self_check"],"properties":{"self_check":{"type":"boolean","enum":[true]}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/system/set_clock.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/system/set_clock","type":"object","required":["clock"],"properties":{"clock":{"type":"integer"}}}
 
 /***/ }),
 
@@ -1601,7 +1618,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ "./dist/src/json_schema/response/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"location":{"$ref":"/request/location"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"location":{"$ref":"/response/location"}}}}
 
 /***/ }),
 
@@ -1755,7 +1772,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ "./dist/src/json_schema/response/system/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/system","basePath":"system","anyOf":[{"$ref":"/response/system/pong"}]}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/system","basePath":"system","anyOf":[{"$ref":"/response/system/pong"},{"$ref":"/response/system/timestamp"}]}
 
 /***/ }),
 
@@ -1763,6 +1780,13 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/system/pong","desccription":"pong response with same key of ping request","type":"object","required":["pong"],"properties":{"pong":{"type":"object","required":["key"],"properties":{"key":{"$ref":"/dataArray"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/system/timestamp.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/system/timestamp","desccription":"timestamp of the device.","type":"object","required":["timestamp"],"properties":{"timestamp":{"type":"number"}}}
 
 /***/ }),
 
@@ -2163,7 +2187,6 @@ const location_1 = __webpack_require__("./dist/src/obniz/libs/embeds/location.js
 class ObnizComponents extends ObnizParts_1.ObnizParts {
     constructor(id, options) {
         super(id, options);
-        this.pongObservers = [];
         this._allComponentKeys = [];
     }
     /**
@@ -2422,26 +2445,6 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
                     targetComponent.notified(obj[key]);
                 }
             }
-        }
-    }
-    _handleSystemCommand(wsObj) {
-        super._handleSystemCommand(wsObj);
-        // ping pong
-        if (wsObj.pong) {
-            for (const callback of this.pongObservers) {
-                callback(wsObj);
-            }
-        }
-    }
-    addPongObserver(callback) {
-        if (callback) {
-            this.pongObservers.push(callback);
-        }
-    }
-    removePongObserver(callback) {
-        if (this.pongObservers.includes(callback)) {
-            const index = this.pongObservers.indexOf(callback);
-            this.pongObservers.splice(index, 1);
         }
     }
     _getFreePeripheralUnit(peripheral) {
@@ -4962,6 +4965,8 @@ const ObnizComponents_1 = __webpack_require__("./dist/src/obniz/ObnizComponents.
 class ObnizSystemMethods extends ObnizComponents_1.ObnizComponents {
     constructor(id, options) {
         super(id, options);
+        this.deviceTimestamp = null;
+        this.pongObservers = [];
     }
     /**
      * This pauses obniz Board for a period given in terms of ms (millisecond).
@@ -5161,6 +5166,42 @@ class ObnizSystemMethods extends ObnizComponents_1.ObnizComponents {
         }
     }
     /**
+     * Set the internal clock of the obniz device.
+     * This will be set to device immediately and used as device timestamp.
+     *
+     * ```javascript
+     * // JavaScript example
+     * obniz.setClock();
+     * ```
+     *
+     * @param unix_milliseconds number of milliseconds since January 1, 1970 00:00:00 UTC. If not specified, the current time will be used.
+     */
+    setClock(unix_milliseconds) {
+        let clock = unix_milliseconds;
+        if (typeof clock !== 'number') {
+            clock = new Date().getTime();
+        }
+        this.send({ system: { clock } });
+    }
+    setQueueMode(params) {
+        if (params.timestamp !== 'none' &&
+            params.timestamp !== 'unix_seconds' &&
+            params.timestamp !== 'unix_milliseconds') {
+            throw new Error(`mode must be 'none' | 'unix_seconds' | 'unix_milliseconds'`);
+        }
+        if (typeof params.interval !== 'number' || params.interval < 0) {
+            throw new Error('interval must be a positive number');
+        }
+        if (params.interval > 60 * 60 * 1000) {
+            throw new Error('interval max value is 3600000');
+        }
+        this.send({
+            system: {
+                queue_mode: { timestamp: params.timestamp, interval: params.interval },
+            },
+        });
+    }
+    /**
      * Action only with obniz Board 1Y.
      *
      * It returns from sleep depending on the pin state of IO0.
@@ -5250,6 +5291,29 @@ class ObnizSystemMethods extends ObnizComponents_1.ObnizComponents {
             };
             this.addPongObserver(callback);
         });
+    }
+    addPongObserver(callback) {
+        if (callback) {
+            this.pongObservers.push(callback);
+        }
+    }
+    removePongObserver(callback) {
+        if (this.pongObservers.includes(callback)) {
+            const index = this.pongObservers.indexOf(callback);
+            this.pongObservers.splice(index, 1);
+        }
+    }
+    _handleSystemCommand(wsObj) {
+        super._handleSystemCommand(wsObj);
+        // ping pong
+        if (wsObj.pong) {
+            for (const callback of this.pongObservers) {
+                callback(wsObj);
+            }
+        }
+        else if (wsObj.timestamp) {
+            this.deviceTimestamp = wsObj.timestamp;
+        }
     }
 }
 exports.ObnizSystemMethods = ObnizSystemMethods;
@@ -25653,6 +25717,9 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
         this._CommandSleepMinute = 11;
         this._CommandSleepIoTrigger = 12;
         this._CommandUpdatePingCheckInterval = 18;
+        this._CommandNotifyTimeStamp = 20;
+        this._CommandSetQueueMode = 21;
+        this._CommandSetClock = 22;
     }
     // Commands
     reboot() {
@@ -25725,6 +25792,8 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
             { uri: '/request/system/sleepSeconds', onValid: this.sleepSeconds },
             { uri: '/request/system/sleepMinute', onValid: this.sleepMinute },
             { uri: '/request/system/sleepIoTrigger', onValid: this.sleepIoTrigger },
+            { uri: '/request/system/queue_mode', onValid: this.setQueueMode },
+            { uri: '/request/system/set_clock', onValid: this.setClock },
         ];
         const res = this.validateCommandSchema(schemaData, module, 'system');
         if (res.valid === 0) {
@@ -25787,6 +25856,9 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
             case this._CommandPingPong:
                 this.pong(objToSend, payload);
                 break;
+            case this._CommandNotifyTimeStamp:
+                this.timestamp(objToSend, payload);
+                break;
             default:
                 super.notifyFromBinary(objToSend, func, payload);
                 break;
@@ -25807,6 +25879,42 @@ class WSCommandSystem extends WSCommandAbstract_1.WSCommandAbstract {
         const triggerNum = trigger === true ? 1 : 0;
         const buf = new Uint8Array([triggerNum]);
         this.sendCommand(this._CommandSleepIoTrigger, buf);
+    }
+    setQueueMode(params) {
+        const interval = params.queue_mode.interval;
+        const timestamp = params.queue_mode.timestamp;
+        const buf = new Uint8Array(9);
+        buf[0] = 0;
+        if (timestamp === 'none') {
+            buf[0] = 0;
+        }
+        else if (timestamp === 'unix_seconds') {
+            buf[0] = 1;
+        }
+        else if (timestamp === 'unix_milliseconds') {
+            buf[0] = 2;
+        }
+        // interval
+        buf[1] = interval >> (8 * 3);
+        buf[2] = interval >> (8 * 2);
+        buf[3] = interval >> (8 * 1);
+        buf[4] = interval >> (8 * 0);
+        this.sendCommand(this._CommandSetQueueMode, buf);
+    }
+    setClock(params) {
+        const unixtime = params.clock;
+        const buf = new Uint8Array(8);
+        const upper = Math.floor(unixtime / Math.pow(2, 32));
+        const lower = unixtime - upper * Math.pow(2, 32);
+        buf[0] = upper >> (8 * 3);
+        buf[1] = upper >> (8 * 2);
+        buf[2] = upper >> (8 * 1);
+        buf[3] = upper >> (8 * 0);
+        buf[4] = lower >> (8 * 3);
+        buf[5] = lower >> (8 * 2);
+        buf[6] = lower >> (8 * 1);
+        buf[7] = lower >> (8 * 0);
+        this.sendCommand(this._CommandSetClock, buf);
     }
 }
 exports.WSCommandSystem = WSCommandSystem;

@@ -265,14 +265,11 @@ export abstract class ObnizComponents extends ObnizParts {
   public plugin?: Plugin;
 
   protected _hwDefinition: any;
-
-  protected pongObservers: any;
   protected _allComponentKeys: any;
   protected _hw_peripherals: any;
 
   constructor(id: string, options?: ObnizOptions) {
     super(id, options);
-    this.pongObservers = [];
     this._allComponentKeys = [];
   }
 
@@ -571,29 +568,6 @@ export abstract class ObnizComponents extends ObnizParts {
           targetComponent.notified(obj[key]);
         }
       }
-    }
-  }
-
-  protected _handleSystemCommand(wsObj: any) {
-    super._handleSystemCommand(wsObj);
-    // ping pong
-    if (wsObj.pong) {
-      for (const callback of this.pongObservers) {
-        callback(wsObj);
-      }
-    }
-  }
-
-  protected addPongObserver(callback: any) {
-    if (callback) {
-      this.pongObservers.push(callback);
-    }
-  }
-
-  protected removePongObserver(callback: any) {
-    if (this.pongObservers.includes(callback)) {
-      const index = this.pongObservers.indexOf(callback);
-      this.pongObservers.splice(index, 1);
     }
   }
 
