@@ -31,5 +31,6 @@ items:
     ws:  {$ref: "/request/ws" }
     wifi:  {$ref: "/request/wifi" }
     plugin:  {$ref: "/request/plugin" }
+    motion: {$ref: "/request/motion" }
     location: {$ref: "/request/location" }
 

@@ -29,6 +29,7 @@ import { ComponentAbstract } from './libs/ComponentAbstact';
 import { HW } from './libs/hw';
 import { PeripheralGrove as PeripheralGrove } from './libs/io_peripherals/grove';
 import { ObnizOptions } from './ObnizOptions';
+import { Motion } from './libs/embeds/motion';
 import { Location } from './libs/embeds/location';
 
 export type PeripheralName = 'pwm' | 'uart' | 'spi' | 'i2c' | 'tcp';
@@ -235,6 +236,11 @@ export abstract class ObnizComponents extends ObnizParts {
    * @category Embeds
    */
   public switch?: ObnizSwitch;
+
+  /**
+   * @category Embeds
+   */
+  public motion?: Motion;
 
   /**
    * @category Embeds
@@ -461,6 +467,7 @@ export abstract class ObnizComponents extends ObnizParts {
       display: Display,
       switch: ObnizSwitch,
       ble,
+      motion: Motion,
       location: Location,
     };
 

@@ -19,6 +19,7 @@ import { WSCommandSystem } from './WSCommandSystem';
 import { WSCommandTcp } from './WSCommandTcp';
 import { WSCommandUart } from './WSCommandUart';
 import { WSCommandWiFi } from './WSCommandWiFi';
+import { WSCommandMotion } from './WSCommandMotion';
 import { WSCommandLocation } from './WSCommandLocation';
 import { WSCommandCANBus } from './WSCommandCANBus';
 
@@ -41,6 +42,7 @@ const commandClasses = {
   WSCommandPlugin,
   WSCommandCANBus,
   WSCommandLocation,
+  WSCommandMotion,
 };
 
 type CommandClassMap = typeof commandClasses;

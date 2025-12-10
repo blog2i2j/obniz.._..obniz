@@ -345,6 +345,9 @@ var map = {
 	"./request/measure/index.yml": "./dist/src/json_schema/request/measure/index.yml",
 	"./request/message/index.yml": "./dist/src/json_schema/request/message/index.yml",
 	"./request/message/send.yml": "./dist/src/json_schema/request/message/send.yml",
+	"./request/motion/deinit.yml": "./dist/src/json_schema/request/motion/deinit.yml",
+	"./request/motion/index.yml": "./dist/src/json_schema/request/motion/index.yml",
+	"./request/motion/init.yml": "./dist/src/json_schema/request/motion/init.yml",
 	"./request/plugin/index.yml": "./dist/src/json_schema/request/plugin/index.yml",
 	"./request/plugin/send.yml": "./dist/src/json_schema/request/plugin/send.yml",
 	"./request/pwm/deinit.yml": "./dist/src/json_schema/request/pwm/deinit.yml",
@@ -442,6 +445,10 @@ var map = {
 	"./response/measure/index.yml": "./dist/src/json_schema/response/measure/index.yml",
 	"./response/message/index.yml": "./dist/src/json_schema/response/message/index.yml",
 	"./response/message/receive.yml": "./dist/src/json_schema/response/message/receive.yml",
+	"./response/motion/acceleration.yml": "./dist/src/json_schema/response/motion/acceleration.yml",
+	"./response/motion/index.yml": "./dist/src/json_schema/response/motion/index.yml",
+	"./response/motion/recognition.yml": "./dist/src/json_schema/response/motion/recognition.yml",
+	"./response/motion/temperature.yml": "./dist/src/json_schema/response/motion/temperature.yml",
 	"./response/plugin/frame.yml": "./dist/src/json_schema/response/plugin/frame.yml",
 	"./response/plugin/index.yml": "./dist/src/json_schema/response/plugin/index.yml",
 	"./response/plugin/receive.yml": "./dist/src/json_schema/response/plugin/receive.yml",
@@ -890,7 +897,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"},"location":{"$ref":"/request/location"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"},"motion":{"$ref":"/request/motion"},"location":{"$ref":"/request/location"}}}}
 
 /***/ }),
 
@@ -1038,6 +1045,27 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/message/send","related":"/response/message/receive","type":"object","additionalProperties":false,"required":["data","to"],"properties":{"data":{},"to":{"type":"array","minItems":1,"items":{"$ref":"/obnizId"}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/motion/deinit.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/motion/deinit","type":"null"}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/motion/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/motion","basePath":"motion","anyOf":[{"$ref":"/request/motion/init"},{"$ref":"/request/motion/deinit"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/motion/init.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/motion/init","type":"object","required":[],"uniqueKeys":[],"properties":{"temperature":{"type":"object","required":["mode"],"additionalProperties":true,"properties":{"mode":{"type":"string","enum":["oneshot","sensitive"]},"sensitivity":{"type":"number","minimum":0,"maximum":1}}},"acceleration":{"type":"object","required":["mode"],"additionalProperties":true,"properties":{"mode":{"type":"string","enum":["oneshot","sensitive"]},"sensitivity":{"type":"number","minimum":0,"maximum":1}}},"recognition":{"type":"object","required":["mode"],"additionalProperties":true,"properties":{"mode":{"type":"string","enum":["oneshot","sensitive"]},"sensitivity":{"type":"number","minimum":0,"maximum":1}}}}}
 
 /***/ }),
 
@@ -1618,7 +1646,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ "./dist/src/json_schema/response/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"location":{"$ref":"/response/location"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/response/io"},"^io1[0-1]$":{"$ref":"/response/io"},"^ad[0-9]$":{"$ref":"/response/ad"},"^ad1[0-1]$":{"$ref":"/response/ad"},"^uart[0-1]$":{"$ref":"/response/uart"},"^spi[0-1]$":{"$ref":"/response/spi"},"^i2c[0-1]$":{"$ref":"/response/i2c"},"^tcp[0-7]$":{"$ref":"/response/tcp"},"^canbus[0-1]$":{"$ref":"/response/canbus"}},"properties":{"io":{"$ref":"/response/ioAnimation"},"switch":{"$ref":"/response/switch"},"ble":{"$ref":"/response/ble"},"measure":{"$ref":"/response/measure"},"message":{"$ref":"/response/message"},"logic_analyzer":{"$ref":"/response/logicAnalyzer"},"system":{"$ref":"/response/system"},"debug":{"$ref":"/response/debug"},"ws":{"$ref":"/response/ws"},"wifi":{"$ref":"/response/wifi"},"plugin":{"$ref":"/response/plugin"},"motion":{"$ref":"/response/motion"},"location":{"$ref":"/response/location"}}}}
 
 /***/ }),
 
@@ -1717,6 +1745,34 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 /***/ (function(module, exports) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/message/receive","related":"/request/message/send","type":"object","required":["data","from"],"properties":{"data":{},"from":{"type":["string","null"]}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/motion/acceleration.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/motion/acceleration","type":"object","required":["acceleration"],"properties":{"acceleration":{"type":"object","required":["r","t","p"],"additionalProperties":true,"properties":{"r":{"type":"number"},"t":{"type":"number"},"p":{"type":"number"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/motion/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/motion","basePath":"motion","anyOf":[{"$ref":"/response/motion/temperature"},{"$ref":"/response/motion/acceleration"},{"$ref":"/response/motion/recognition"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/motion/recognition.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/motion/recognition","type":"object","required":["recognition"],"properties":{"recognition":{"type":"object","required":["motion","possibility"],"additionalProperties":true,"properties":{"motion":{"type":"string","enum":["none","moving"]},"possibility":{"type":"number"}}}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/motion/temperature.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/motion/temperature","required":["temperature"],"temperature":{"type":"number"}}
 
 /***/ }),
 
@@ -2183,6 +2239,7 @@ const ObnizParts_1 = __webpack_require__("./dist/src/obniz/ObnizParts.js");
 const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
 const hw_1 = __webpack_require__("./dist/src/obniz/libs/hw/index.js");
 const grove_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/grove.js");
+const motion_1 = __webpack_require__("./dist/src/obniz/libs/embeds/motion.js");
 const location_1 = __webpack_require__("./dist/src/obniz/libs/embeds/location.js");
 class ObnizComponents extends ObnizParts_1.ObnizParts {
     constructor(id, options) {
@@ -2350,6 +2407,7 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
             display: display_1.Display,
             switch: switch_1.ObnizSwitch,
             ble,
+            motion: motion_1.Motion,
             location: location_1.Location,
         };
         const protocol_map = {
@@ -17590,6 +17648,145 @@ exports.Location = Location;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/embeds/motion.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @packageDocumentation
+ * @module ObnizCore.Components
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Motion = void 0;
+const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
+var MotionType;
+(function (MotionType) {
+    MotionType["None"] = "none";
+    MotionType["Moving"] = "moving";
+})(MotionType || (MotionType = {}));
+/**
+ * GPS/GNSS Service
+ *
+ * @category Embeds
+ */
+class Motion extends ComponentAbstact_1.ComponentAbstract {
+    constructor(obniz, info) {
+        super(obniz);
+        this.on('/response/motion/temperature', (obj) => {
+            this.Obniz._runUserCreatedFunction(this.onTemperatureUpdate, obj.temperature);
+        });
+        this.on('/response/motion/acceleration', (obj) => {
+            this.Obniz._runUserCreatedFunction(this.onAccelerationUpdate, obj.acceleration.r, obj.acceleration.t, obj.acceleration.p);
+        });
+        this.on('/response/motion/recognition', (obj) => {
+            this.Obniz._runUserCreatedFunction(this.onRecognitionUpdate, obj.recognition.motion, obj.recognition.possibility);
+        });
+        this._reset();
+    }
+    _reset() {
+        // No Need to reset
+    }
+    schemaBasePath() {
+        return 'motion';
+    }
+    start(temp_sensitivity = 0, acceleration_sensitivity = 0, recognition_sensitivity = 0) {
+        const motion = {};
+        if (temp_sensitivity > 0) {
+            motion.temperature = {
+                mode: 'sensitive',
+                sensitivity: temp_sensitivity,
+            };
+        }
+        if (acceleration_sensitivity > 0) {
+            motion.acceleration = {
+                mode: 'sensitive',
+                sensitivity: acceleration_sensitivity,
+            };
+        }
+        if (recognition_sensitivity > 0) {
+            motion.recognition = {
+                mode: 'sensitive',
+                sensitivity: recognition_sensitivity,
+            };
+        }
+        const obj = {
+            motion,
+        };
+        this.Obniz.send(obj);
+    }
+    /**
+     * One shot getting
+     *
+     * ```javascript
+     * var value = obniz.motion.getTemperatureWait();
+     * // 25.0
+     * ```
+     *
+     * @return temperature in degree Celsius
+     *
+     */
+    async getTemperatureWait() {
+        const obj = {};
+        obj.motion = {
+            temperature: {
+                mode: 'oneshot',
+                sensitivity: 1,
+            },
+        };
+        const data = await this.sendAndReceiveJsonWait(obj, '/response/motion/temperature');
+        return data.temperature;
+    }
+    /**
+     * One shot getting
+     *
+     * ```javascript
+     * var value = obniz.motion.getAccelerationWait();
+     * // { r: 0.1, theta: 90, phi: 90 }
+     * ```
+     *
+     * @return acceleration
+     *
+     */
+    async getAccelerationWait() {
+        const obj = {};
+        obj.motion = {
+            acceleration: {
+                mode: 'oneshot',
+                sensitivity: 1,
+            },
+        };
+        const data = await this.sendAndReceiveJsonWait(obj, '/response/motion/acceleration');
+        return data.acceleration;
+    }
+    /**
+     * One shot getting
+     *
+     * ```javascript
+     * var value = obniz.motion.getRecognitionWait();
+     * // { motion: 'moving', possibility: 0.5 }
+     * ```
+     *
+     * @return recognition
+     *
+     */
+    async getRecognitionWait() {
+        const obj = {};
+        obj.motion = {
+            recognition: {
+                mode: 'oneshot',
+                sensitivity: 1,
+            },
+        };
+        const data = await this.sendAndReceiveJsonWait(obj, '/response/motion/recognition');
+        return data.recognition;
+    }
+}
+exports.Motion = Motion;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/embeds/switch.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -22520,6 +22717,7 @@ class WSCommandAbstract {
     setHw(obj) {
         this._hw = obj;
     }
+    // This function does NOT send command to websocket. Just doing creating frame and append it to some variable.
     sendCommand(func, payload) {
         if (this.parsed) {
             this.parsed(this.module, func, payload);
@@ -25305,6 +25503,160 @@ exports.WSCommandMeasurement = WSCommandMeasurement;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/wscommand/WSCommandMotion.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WSCommandMotion = void 0;
+/**
+ * @packageDocumentation
+ * @ignore
+ */
+const WSCommandAbstract_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandAbstract.js");
+class WSCommandMotion extends WSCommandAbstract_1.WSCommandAbstract {
+    constructor() {
+        super(...arguments);
+        this.module = 19;
+        this._CommandInit = 0;
+        this._CommandDeinit = 1;
+        this._CommandNotifyRawTemp = 2;
+        this._CommandNotifyRawAcc = 3;
+        this._CommandNotifyRecognition = 4;
+    }
+    // Commands
+    init(params) {
+        const buf = new Uint8Array(6);
+        for (let i = 0; i < 6; i++) {
+            buf[i] = 0;
+        }
+        // mode // 0 not change // 1 oneshot // 2 sensitive
+        // param
+        const modes = ['oneshot', 'sensitive'];
+        if (params.temperature && typeof params.temperature === 'object') {
+            const temperature = params.temperature;
+            if (!modes.includes(temperature.mode)) {
+                throw new Error('motion: temperature.mode is required');
+            }
+            if (temperature.mode === 'oneshot') {
+                buf[0] = 1;
+            }
+            else {
+                buf[0] = 2;
+                buf[1] = clip100(temperature.sensitivity * 100);
+            }
+        }
+        if (params.acceleration && typeof params.acceleration === 'object') {
+            const acceleration = params.acceleration;
+            if (!modes.includes(acceleration.mode)) {
+                throw new Error('motion: acceleration.mode is required');
+            }
+            if (acceleration.mode === 'oneshot') {
+                buf[2] = 1;
+            }
+            else {
+                buf[2] = 2;
+                buf[3] = clip100(acceleration.sensitivity * 100);
+            }
+        }
+        if (params.recognition && typeof params.recognition === 'object') {
+            const recognition = params.recognition;
+            if (!modes.includes(recognition.mode)) {
+                throw new Error('motion: recognition.mode is required');
+            }
+            if (recognition.mode === 'oneshot') {
+                buf[4] = 1;
+            }
+            else {
+                buf[4] = 2;
+                buf[5] = clip100(recognition.sensitivity * 100);
+            }
+        }
+        this.sendCommand(this._CommandInit, buf);
+    }
+    deinit(params) {
+        const buf = new Uint8Array(0);
+        this.sendCommand(this._CommandDeinit, buf);
+    }
+    parseFromJson(json) {
+        const module = json.motion;
+        if (!module)
+            return;
+        const schemaData = [
+            { uri: '/request/motion/init', onValid: this.init },
+            { uri: '/request/motion/deinit', onValid: this.deinit },
+        ];
+        const res = this.validateCommandSchema(schemaData, module, 'motion');
+        if (res.valid === 0) {
+            if (res.invalidButLike.length > 0) {
+                throw new Error(res.invalidButLike[0].message);
+            }
+            else {
+                throw new this.WSCommandNotFoundError('[motion]unknown commnad');
+            }
+        }
+    }
+    notifyFromBinary(objToSend, func, payload) {
+        if (func === this._CommandNotifyRawTemp && payload.byteLength === 4) {
+            const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+            const temperature = view.getFloat32(0, false); // big endigan
+            objToSend.motion = {
+                temperature,
+            };
+        }
+        else if (func === this._CommandNotifyRawAcc &&
+            payload.byteLength === 4 * 3) {
+            const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+            const r = view.getFloat32(0, false); // big endigan
+            const t = view.getFloat32(4, false); // big endigan
+            const p = view.getFloat32(8, false); // big endigan
+            objToSend.motion = {
+                acceleration: {
+                    r,
+                    t,
+                    p,
+                },
+            };
+        }
+        else if (func === this._CommandNotifyRecognition &&
+            payload.byteLength === 2) {
+            const recognition_id = payload[0];
+            const possibility = payload[1];
+            const RecognitionTable = {
+                '0': 'none',
+                '1': 'moving',
+            };
+            let recognition = RecognitionTable[recognition_id];
+            if (recognition === undefined) {
+                recognition = 'unknown';
+            }
+            objToSend.motion = {
+                recognition: {
+                    motion: recognition,
+                    possibility: clip100(possibility) / 100,
+                },
+            };
+        }
+        else {
+            super.notifyFromBinary(objToSend, func, payload);
+        }
+    }
+}
+exports.WSCommandMotion = WSCommandMotion;
+const clip100 = (value) => {
+    if (value > 100) {
+        return 100;
+    }
+    if (value < 0) {
+        return 0;
+    }
+    return value;
+};
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/wscommand/WSCommandPWM.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -26390,6 +26742,7 @@ const WSCommandSystem_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/W
 const WSCommandTcp_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandTcp.js");
 const WSCommandUart_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandUart.js");
 const WSCommandWiFi_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandWiFi.js");
+const WSCommandMotion_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandMotion.js");
 const WSCommandLocation_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandLocation.js");
 const WSCommandCANBus_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandCANBus.js");
 const commandClasses = {
@@ -26411,6 +26764,7 @@ const commandClasses = {
     WSCommandPlugin: WSCommandPlugin_1.WSCommandPlugin,
     WSCommandCANBus: WSCommandCANBus_1.WSCommandCANBus,
     WSCommandLocation: WSCommandLocation_1.WSCommandLocation,
+    WSCommandMotion: WSCommandMotion_1.WSCommandMotion,
 };
 const createCommandManager = () => {
     const instance = new WSCommandManager_1.WSCommandManager(commandClasses);
