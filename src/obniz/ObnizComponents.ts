@@ -15,6 +15,7 @@ import { PeripheralIO } from './libs/io_peripherals/io';
 import { PeripheralPWM } from './libs/io_peripherals/pwm';
 import { PeripheralSPI } from './libs/io_peripherals/spi';
 import { PeripheralUART } from './libs/io_peripherals/uart';
+import { PeripheralCANBus } from './libs/io_peripherals/canbus';
 import { LogicAnalyzer } from './libs/measurements/logicanalyzer';
 import { ObnizMeasure } from './libs/measurements/measure';
 import { WiFi } from './libs/network/wifi';
@@ -235,6 +236,11 @@ export abstract class ObnizComponents extends ObnizParts {
   public switch?: ObnizSwitch;
 
   /**
+   * @category Peripherals
+   */
+  public canbus0?: PeripheralCANBus;
+
+  /**
    * If obnizOS ver >= 3.0.0, automatically load [[ObnizCore.Components.Ble.Hci.ObnizBLE|ObnizHciBLE]],
    * and obnizOS ver < 3.0.0 throw unsupported Error,
    *
@@ -443,6 +449,7 @@ export abstract class ObnizComponents extends ObnizParts {
       i2c: PeripheralI2C,
       pwm: PeripheralPWM,
       grove: PeripheralGrove,
+      canbus: PeripheralCANBus,
     };
 
     const ble = ObnizHciBLE;
@@ -489,6 +496,7 @@ export abstract class ObnizComponents extends ObnizParts {
       for (const key in embeds_map) {
         if (hw_embeds[key]) {
           const Class = embeds_map[key];
+          // 'this' must be an instance of Obniz class since it's the only class that gets instantiated by user.
           (this as any)[key] = new Class(this, hw_embeds[key]);
           this._allComponentKeys.push(key);
           if (typeof (this as any)[key].debugHandler === 'function') {

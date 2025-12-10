@@ -307,6 +307,10 @@ var map = {
 	"./request/ble/security/indicate_security_level.yml": "./dist/src/json_schema/request/ble/security/indicate_security_level.yml",
 	"./request/ble/security/key_max_size.yml": "./dist/src/json_schema/request/ble/security/key_max_size.yml",
 	"./request/ble/security/key_type.yml": "./dist/src/json_schema/request/ble/security/key_type.yml",
+	"./request/canbus/deinit.yml": "./dist/src/json_schema/request/canbus/deinit.yml",
+	"./request/canbus/index.yml": "./dist/src/json_schema/request/canbus/index.yml",
+	"./request/canbus/init.yml": "./dist/src/json_schema/request/canbus/init.yml",
+	"./request/canbus/send.yml": "./dist/src/json_schema/request/canbus/send.yml",
 	"./request/display/clear.yml": "./dist/src/json_schema/request/display/clear.yml",
 	"./request/display/index.yml": "./dist/src/json_schema/request/display/index.yml",
 	"./request/display/pin_assign.yml": "./dist/src/json_schema/request/display/pin_assign.yml",
@@ -408,6 +412,8 @@ var map = {
 	"./response/ble/peripheral/descriptor_write.yml": "./dist/src/json_schema/response/ble/peripheral/descriptor_write.yml",
 	"./response/ble/peripheral/index.yml": "./dist/src/json_schema/response/ble/peripheral/index.yml",
 	"./response/ble/peripheral/status.yml": "./dist/src/json_schema/response/ble/peripheral/status.yml",
+	"./response/canbus/index.yml": "./dist/src/json_schema/response/canbus/index.yml",
+	"./response/canbus/receive.yml": "./dist/src/json_schema/response/canbus/receive.yml",
 	"./response/debug/error.yml": "./dist/src/json_schema/response/debug/error.yml",
 	"./response/debug/index.yml": "./dist/src/json_schema/response/debug/index.yml",
 	"./response/debug/warning.yml": "./dist/src/json_schema/response/debug/warning.yml",
@@ -761,6 +767,34 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 
 /***/ }),
 
+/***/ "./dist/src/json_schema/request/canbus/deinit.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/canbus/deinit","type":"null"}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/canbus/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/canbus","basePath":"canbus0","anyOf":[{"$ref":"/request/canbus/init"},{"$ref":"/request/canbus/deinit"},{"$ref":"/request/canbus/send"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/canbus/init.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/canbus/init","type":"object","required":["tx","rx","kbps","mode","filter_code","filter_mask"],"uniqueKeys":["tx","rx"],"properties":{"mode":{"type":"string","enum":["normal","noack","listen"]},"tx":{"$ref":"/pinSetting"},"rx":{"$ref":"/pinSetting"},"kbps":{"type":"integer","minimum":1,"maximum":1000,"desription":"bus speed. options are different in MCUs"},"filter_code":{"type":"integer","minimum":0,"maximum":4294967295,"desription":"Accept Data Fields"},"filter_mask":{"type":"integer","minimum":0,"maximum":4294967295,"desription":"Accept Filter Mask. 0 means accept all."}}}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/canbus/send.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/canbus/send","related":"/response/canbus/read","type":"object","required":["id","data"],"properties":{"id":{"type":"integer","desription":"message identifier"},"data":{"$ref":"/dataArray1024"},"extended":{"type":"boolean","default":false,"desription":"indicate extended format or not"},"rtr":{"type":"boolean","default":false,"desription":"message is remote frame"},"single_shot":{"type":"boolean","default":false,"desription":"message is single shot"},"self_reception":{"type":"boolean","default":false,"desription":"message is self reception request"}}}
+
+/***/ }),
+
 /***/ "./dist/src/json_schema/request/display/clear.yml":
 /***/ (function(module, exports) {
 
@@ -848,7 +882,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 /***/ "./dist/src/json_schema/request/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"}}}}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request","type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"patternProperties":{"^io[0-9]$":{"$ref":"/request/io"},"^io1[0-1]$":{"$ref":"/request/io"},"^ad[0-9]$":{"$ref":"/request/ad"},"^ad1[0-1]$":{"$ref":"/request/ad"},"^pwm[0-5]$":{"$ref":"/request/pwm"},"^uart[0-1]$":{"$ref":"/request/uart"},"^spi[0-1]$":{"$ref":"/request/spi"},"^i2c[0-1]$":{"$ref":"/request/i2c"},"^tcp[0-7]$":{"$ref":"/request/tcp"},"^canbus[0-1]$":{"$ref":"/request/canbus"}},"properties":{"io":{"$ref":"/request/ioAnimation"},"ble":{"$ref":"/request/ble"},"switch":{"$ref":"/request/switch"},"display":{"$ref":"/request/display"},"measure":{"$ref":"/request/measure"},"message":{"$ref":"/request/message"},"logic_analyzer":{"$ref":"/request/logicAnalyzer"},"system":{"$ref":"/request/system"},"ws":{"$ref":"/request/ws"},"wifi":{"$ref":"/request/wifi"},"plugin":{"$ref":"/request/plugin"}}}}
 
 /***/ }),
 
@@ -1468,6 +1502,20 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/res
 
 /***/ }),
 
+/***/ "./dist/src/json_schema/response/canbus/index.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/canbus","basePath":"canbus0","anyOf":[{"$ref":"/response/canbus/receive"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/response/canbus/receive.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/response/canbus/receive","type":"object","properties":{"id":{"type":"integer","desription":"message identifier"},"data":{"$ref":"/dataArray"},"extended":{"type":"boolean","default":false,"desription":"indicate extended format or not"},"rtr":{"type":"boolean","default":false,"desription":"message is remote frame"}}}
+
+/***/ }),
+
 /***/ "./dist/src/json_schema/response/debug/error.yml":
 /***/ (function(module, exports) {
 
@@ -2061,6 +2109,7 @@ const io_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/io.js");
 const pwm_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/pwm.js");
 const spi_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/spi.js");
 const uart_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/uart.js");
+const canbus_1 = __webpack_require__("./dist/src/obniz/libs/io_peripherals/canbus.js");
 const logicanalyzer_1 = __webpack_require__("./dist/src/obniz/libs/measurements/logicanalyzer.js");
 const measure_1 = __webpack_require__("./dist/src/obniz/libs/measurements/measure.js");
 const wifi_1 = __webpack_require__("./dist/src/obniz/libs/network/wifi.js");
@@ -2230,6 +2279,7 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
             i2c: i2c_1.PeripheralI2C,
             pwm: pwm_1.PeripheralPWM,
             grove: grove_1.PeripheralGrove,
+            canbus: canbus_1.PeripheralCANBus,
         };
         const ble = ble_1.ObnizBLE;
         const embeds_map = {
@@ -2265,6 +2315,7 @@ class ObnizComponents extends ObnizParts_1.ObnizParts {
             for (const key in embeds_map) {
                 if (hw_embeds[key]) {
                     const Class = embeds_map[key];
+                    // 'this' must be an instance of Obniz class since it's the only class that gets instantiated by user.
                     this[key] = new Class(this, hw_embeds[key]);
                     this._allComponentKeys.push(key);
                     if (typeof this[key].debugHandler === 'function') {
@@ -17877,6 +17928,151 @@ exports.PeripheralAD = PeripheralAD;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/io_peripherals/canbus.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @packageDocumentation
+ * @module ObnizCore.Components
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PeripheralCANBus = void 0;
+const ComponentAbstact_1 = __webpack_require__("./dist/src/obniz/libs/ComponentAbstact.js");
+const util_1 = __webpack_require__("./dist/src/obniz/libs/utils/util.js");
+/**
+ * CAN Bus
+ *
+ * @category Peripherals
+ */
+class PeripheralCANBus extends ComponentAbstact_1.ComponentAbstract {
+    constructor(obniz, id) {
+        super(obniz);
+        this.id = id;
+        this.on('/response/canbus/receive', (obj) => {
+            if (this.onreceive) {
+                this.Obniz._runUserCreatedFunction(this.onreceive, obj.extended, obj.rtr, obj.id, obj.data);
+            }
+        });
+        this._reset();
+    }
+    /**
+     * Start CAN Bus
+     *
+     *
+     *
+     * ```javascript
+     * // Javascript Example
+     * obniz.canbus0.start({mode:"normal", tx :0, rx:1, kbps:100, filter_code: 0, filter_mask: 0});
+     * ```
+     *
+     * @param params CAN Bus parameters
+     */
+    start(params) {
+        const err = util_1.ObnizUtil._requiredKeys(params, ['tx', 'rx', 'kbps', 'mode']);
+        if (err) {
+            throw new Error("canbus start param '" + err + "' required, but not found ");
+        }
+        this.params = util_1.ObnizUtil._keyFilter(params, [
+            'tx',
+            'rx',
+            'mode',
+            'kbps',
+            'filter_code',
+            'filter_mask',
+        ]);
+        const modes = ['normal', 'noack', 'listen'];
+        if (!modes.includes(params.mode)) {
+            throw new Error(`invalid mode ${params.mode}`);
+        }
+        const ioKeys = ['tx', 'rx'];
+        for (const key of ioKeys) {
+            if (this.params[key] && !this.Obniz.isValidIO(this.params[key])) {
+                throw new Error("CAN Bus start param '" + key + "' are to be valid io no");
+            }
+        }
+        const obj = {};
+        obj['canbus' + this.id] = {
+            mode: params.mode,
+            tx: params.tx,
+            rx: params.rx,
+            kbps: params.kbps,
+            filter_code: params.filter_code,
+            filter_mask: params.filter_mask,
+        };
+        this.used = true;
+        this.Obniz.send(obj);
+    }
+    /**
+     * It only sends data to canbus and does not receive it.
+     *
+     * ```javascript
+     * // Javascript Example
+     * obniz.canbus0.start({mode:"normal", tx :0, rx:1, kbps:100, filter_code: 0, filter_mask: 0});
+     * obniz.canbus0.send({}, 0x700, [0x12, 0x98]);
+     * ```
+     *
+     * @param data Max length is 1024 bytes.
+     */
+    send(modes, id, data) {
+        if (!this.used) {
+            throw new Error(`canbus${this.id} is not started`);
+        }
+        const obj = {};
+        obj['canbus' + this.id] = {
+            data,
+            id,
+            extended: modes.extended === true,
+            rtr: modes.rtr === true,
+            single_shot: modes.single_shot === true,
+            self_reception: modes.self_reception === true,
+        };
+        this.Obniz.send(obj);
+    }
+    /**
+     * @ignore
+     */
+    isUsed() {
+        return this.used;
+    }
+    /**
+     * It ends canbus
+     *
+     * ```javascript
+     * // Javascript Example
+     * obniz.canbus0.start({mode:"normal", tx :0, rx:1, kbps:100, filter_code: 0, filter_mask: 0});
+     * obniz.canbus0.end();
+     * ```
+     *
+     */
+    end() {
+        const obj = {};
+        obj['canbus' + this.id] = null;
+        this.params = null;
+        this.Obniz.send(obj);
+    }
+    /**
+     * @ignore
+     * @private
+     */
+    schemaBasePath() {
+        return 'canbus' + this.id;
+    }
+    /**
+     * @ignore
+     * @private
+     */
+    _reset() {
+        this.used = false;
+        this.params = null;
+    }
+}
+exports.PeripheralCANBus = PeripheralCANBus;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/io_peripherals/directive.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -23665,6 +23861,155 @@ exports.WSCommandBleHci = WSCommandBleHci;
 
 /***/ }),
 
+/***/ "./dist/src/obniz/libs/wscommand/WSCommandCANBus.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WSCommandCANBus = void 0;
+/**
+ * @packageDocumentation
+ * @ignore
+ */
+const WSCommandAbstract_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandAbstract.js");
+class WSCommandCANBus extends WSCommandAbstract_1.WSCommandAbstract {
+    constructor() {
+        super(...arguments);
+        this.module = 18;
+        this._CommandInit = 0;
+        this._CommandDeinit = 1;
+        this._CommandWrite = 2;
+        this._CommandRead = 3;
+    }
+    // Commands
+    init(params, module) {
+        const tx = params.tx;
+        const rx = params.rx;
+        const kbps = Math.floor(params.kbps);
+        if (tx === null || rx === null) {
+            throw new Error('canbus: tx, rx is required');
+        }
+        let mode = 0b00000000;
+        if (params.mode === 'normal') {
+            mode = 0b00000000;
+        }
+        else if (params.mode === 'noack') {
+            mode = 0b01000000;
+        }
+        else if (params.mode === 'listen') {
+            mode = 0b10000000;
+        }
+        else {
+            throw new Error(`unknown mode`);
+        }
+        const buf = new Uint8Array(14);
+        buf[0] = module;
+        buf[1] = tx;
+        buf[2] = rx;
+        buf[3] = kbps >> 8;
+        buf[4] = kbps;
+        buf[5] = mode;
+        buf[6] = params.filter_code >> (3 * 8);
+        buf[7] = params.filter_code >> (2 * 8);
+        buf[8] = params.filter_code >> (1 * 8);
+        buf[9] = params.filter_code >> (0 * 8);
+        buf[10] = params.filter_mask >> (3 * 8);
+        buf[11] = params.filter_mask >> (2 * 8);
+        buf[12] = params.filter_mask >> (1 * 8);
+        buf[13] = params.filter_mask >> (0 * 8);
+        this.sendCommand(this._CommandInit, buf);
+    }
+    deinit(params, module) {
+        const buf = new Uint8Array([module]);
+        this.sendCommand(this._CommandDeinit, buf);
+    }
+    send(params, module) {
+        const buf = new Uint8Array(6 + params.data.length);
+        buf[0] = module;
+        let mode = 0;
+        if (params.extended) {
+            mode |= 0b10000000;
+        }
+        if (params.rtr) {
+            mode |= 0b01000000;
+        }
+        if (params.single_shot) {
+            mode |= 0b00100000;
+        }
+        if (params.self_reception) {
+            mode |= 0b00010000;
+        }
+        buf[1] = mode;
+        buf[2] = params.id >> (3 * 8);
+        buf[3] = params.id >> (2 * 8);
+        buf[4] = params.id >> (1 * 8);
+        buf[5] = params.id >> (0 * 8);
+        if (params.data.length) {
+            buf.set(params.data, 6);
+        }
+        this.sendCommand(this._CommandWrite, buf);
+    }
+    parseFromJson(json) {
+        for (let i = 0; i < 1; i++) {
+            const module = json['canbus' + i];
+            if (module === undefined) {
+                continue;
+            }
+            const schemaData = [
+                { uri: '/request/canbus/init', onValid: this.init },
+                { uri: '/request/canbus/send', onValid: this.send },
+                { uri: '/request/canbus/deinit', onValid: this.deinit },
+            ];
+            const res = this.validateCommandSchema(schemaData, module, 'canbus' + i, i);
+            if (res.valid === 0) {
+                if (res.invalidButLike.length > 0) {
+                    throw new Error(res.invalidButLike[0].message);
+                }
+                else {
+                    throw new this.WSCommandNotFoundError(`[canbus${i}]unknown command`);
+                }
+            }
+        }
+    }
+    notifyFromBinary(objToSend, func, payload) {
+        if (func === this._CommandRead && payload.byteLength >= 6) {
+            const module_index = payload[0];
+            const mode = payload[1];
+            let extended = false;
+            let rtr = false;
+            if (mode & 0b10000000) {
+                extended = true;
+            }
+            if (mode & 0b01000000) {
+                rtr = true;
+            }
+            let id = 0;
+            id |= payload[2] << (3 * 8);
+            id |= payload[3] << (2 * 8);
+            id |= payload[4] << (1 * 8);
+            id |= payload[5] << (0 * 8);
+            const arr = new Array(payload.byteLength - 6);
+            for (let i = 0; i < arr.length; i++) {
+                arr[i] = payload[6 + i];
+            }
+            objToSend['canbus' + module_index] = {
+                id,
+                extended,
+                rtr,
+                data: arr,
+            };
+        }
+        else {
+            super.notifyFromBinary(objToSend, func, payload);
+        }
+    }
+}
+exports.WSCommandCANBus = WSCommandCANBus;
+
+
+/***/ }),
+
 /***/ "./dist/src/obniz/libs/wscommand/WSCommandDirective.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -25777,6 +26122,7 @@ const WSCommandSystem_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/W
 const WSCommandTcp_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandTcp.js");
 const WSCommandUart_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandUart.js");
 const WSCommandWiFi_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandWiFi.js");
+const WSCommandCANBus_1 = __webpack_require__("./dist/src/obniz/libs/wscommand/WSCommandCANBus.js");
 const commandClasses = {
     WSCommandSystem: WSCommandSystem_1.WSCommandSystem,
     WSCommandDirective: WSCommandDirective_1.WSCommandDirective,
@@ -25794,6 +26140,7 @@ const commandClasses = {
     WSCommandTcp: WSCommandTcp_1.WSCommandTcp,
     WSCommandWiFi: WSCommandWiFi_1.WSCommandWiFi,
     WSCommandPlugin: WSCommandPlugin_1.WSCommandPlugin,
+    WSCommandCANBus: WSCommandCANBus_1.WSCommandCANBus,
 };
 const createCommandManager = () => {
     const instance = new WSCommandManager_1.WSCommandManager(commandClasses);
