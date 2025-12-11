@@ -348,7 +348,9 @@ var map = {
 	"./request/motion/deinit.yml": "./dist/src/json_schema/request/motion/deinit.yml",
 	"./request/motion/index.yml": "./dist/src/json_schema/request/motion/index.yml",
 	"./request/motion/init.yml": "./dist/src/json_schema/request/motion/init.yml",
+	"./request/plugin/exec_lua.yml": "./dist/src/json_schema/request/plugin/exec_lua.yml",
 	"./request/plugin/index.yml": "./dist/src/json_schema/request/plugin/index.yml",
+	"./request/plugin/reload_lua.yml": "./dist/src/json_schema/request/plugin/reload_lua.yml",
 	"./request/plugin/send.yml": "./dist/src/json_schema/request/plugin/send.yml",
 	"./request/pwm/deinit.yml": "./dist/src/json_schema/request/pwm/deinit.yml",
 	"./request/pwm/freq.yml": "./dist/src/json_schema/request/pwm/freq.yml",
@@ -1074,10 +1076,24 @@ module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/req
 
 /***/ }),
 
+/***/ "./dist/src/json_schema/request/plugin/exec_lua.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/plugin/exec_lua","desccription":"Executing Lua instantly","type":"object","required":["exec_lua"],"properties":{"exec_lua":{"type":"string"}}}
+
+/***/ }),
+
 /***/ "./dist/src/json_schema/request/plugin/index.yml":
 /***/ (function(module, exports) {
 
-module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/plugin","basePath":"plugin","anyOf":[{"$ref":"/request/plugin/send"}]}
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/plugin","basePath":"plugin","anyOf":[{"$ref":"/request/plugin/send"},{"$ref":"/request/plugin/exec_lua"},{"$ref":"/request/plugin/reload_lua"}]}
+
+/***/ }),
+
+/***/ "./dist/src/json_schema/request/plugin/reload_lua.yml":
+/***/ (function(module, exports) {
+
+module.exports = {"$schema":"http://json-schema.org/draft-04/schema#","id":"/request/plugin/reload_lua","desccription":"Load from storage and run Lua.","type":"object","required":["reload"],"properties":{"reload":{"type":"boolean"}}}
 
 /***/ }),
 
@@ -21014,6 +21030,41 @@ class Plugin {
         this.Obniz.send({ plugin: { send: send_data } });
     }
     /**
+     * Executing Lua on target device instantly.
+     * Lua script never be saved on a device.
+     *
+     * ```javascript
+     * // Javascript Example
+     * obniz.plugin.execLua("duration = 60")
+     * ```
+     *
+     */
+    execLua(lua_script) {
+        if (semver_1.default.major(this.Obniz.firmware_ver) < 7) {
+            throw new Error(`Please update obniz firmware >= 7.0.0`);
+        }
+        if (typeof lua_script !== 'string') {
+            throw new Error(`Lua Script must be a string`);
+        }
+        this.Obniz.send({ plugin: { exec_lua: lua_script } });
+    }
+    /**
+     * Executing Lua on target device and save to it's flash memory.
+     *
+     * ```javascript
+     * // Javascript Example
+     * obniz.storage.savePluginLua(`os.log("Hello World")`);
+     * obniz.plugin.reloadLua();
+     * ```
+     *
+     */
+    reloadLua() {
+        if (semver_1.default.major(this.Obniz.firmware_ver) < 7) {
+            throw new Error(`Please update obniz firmware >= 7.0.0`);
+        }
+        this.Obniz.send({ plugin: { reload: true } });
+    }
+    /**
      * @ignore
      * @private
      */
@@ -26296,7 +26347,7 @@ exports.WSCommandPWM = WSCommandPWM;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(Buffer) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WSCommandPlugin = void 0;
 /**
@@ -26311,17 +26362,35 @@ class WSCommandPlugin extends WSCommandAbstract_1.WSCommandAbstract {
         this._CommandSend = 0;
         this._CommandReceive = 1;
         this._CommandFrame = 2;
+        this._CommandExec = 3;
+        this._CommandDirective = 4;
     }
     send(params, index) {
         const buf = new Uint8Array(params.send);
         this.sendCommand(this._CommandSend, buf);
+    }
+    exec_lua(json) {
+        const buf = Buffer.from(json.exec_lua, 'utf8');
+        const result = new Uint8Array(buf);
+        this.sendCommand(this._CommandExec, result);
+    }
+    reload_lua(json) {
+        if (json.reload) {
+            const buf = new Uint8Array(1);
+            buf[0] = 1;
+            this.sendCommand(this._CommandDirective, buf);
+        }
     }
     parseFromJson(json) {
         const module = json.plugin;
         if (module === undefined) {
             return;
         }
-        const schemaData = [{ uri: '/request/plugin/send', onValid: this.send }];
+        const schemaData = [
+            { uri: '/request/plugin/send', onValid: this.send },
+            { uri: '/request/plugin/exec_lua', onValid: this.exec_lua },
+            { uri: '/request/plugin/reload_lua', onValid: this.reload_lua },
+        ];
         const res = this.validateCommandSchema(schemaData, module, 'plugin');
         if (res.valid === 0) {
             if (res.invalidButLike.length > 0) {
@@ -26377,6 +26446,7 @@ class WSCommandPlugin extends WSCommandAbstract_1.WSCommandAbstract {
 }
 exports.WSCommandPlugin = WSCommandPlugin;
 
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__("./node_modules/buffer/index.js").Buffer))
 
 /***/ }),
 
