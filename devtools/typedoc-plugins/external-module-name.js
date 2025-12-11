@@ -1,20 +1,14 @@
-const {
-  Converter,
-  ReflectionKind,
-  DeclarationReflection,
-} = require('typedoc');
+const { Converter, ReflectionKind, DeclarationReflection } = require('typedoc');
 
-exports.load = function (app) {
+exports.load = (app) => {
   app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (context) => {
     mergeModules(context.project);
   });
 };
 
-function mergeModules(project) {
+const mergeModules = (project) => {
   const reflections = Object.values(project.reflections);
-  const modules = reflections.filter((ref) =>
-    isModule(ref)
-  );
+  const modules = reflections.filter((ref) => isModule(ref));
   modules.sort((a, b) => segmentCount(a.name) - segmentCount(b.name));
   const moduleMap = new Map();
   for (const mod of modules) {
@@ -31,22 +25,24 @@ function mergeModules(project) {
       removeReflection(project, mod);
     }
   }
-}
+};
 
-function isModule(reflection) {
-  return (reflection.kind & ReflectionKind.Module) !== 0 ||
-    (reflection.kind & ReflectionKind.Namespace) !== 0;
-}
+const isModule = (reflection) => {
+  return (
+    (reflection.kind & ReflectionKind.Module) !== 0 ||
+    (reflection.kind & ReflectionKind.Namespace) !== 0
+  );
+};
 
-function segmentCount(name) {
+const segmentCount = (name) => {
   if (!name) return 0;
   return name.split('.').filter(Boolean).length;
-}
+};
 
-function ensureModuleChain(project, parts) {
+const ensureModuleChain = (project, parts) => {
   let parent = project;
   for (const part of parts) {
-    parent.children ||= [];
+    parent.children = parent.children || [];
     let child = parent.children.find(
       (ref) => isModule(ref) && ref.name === part
     );
@@ -59,9 +55,9 @@ function ensureModuleChain(project, parts) {
     parent = child;
   }
   return parent;
-}
+};
 
-function moveReflection(project, reflection, newParent, newName) {
+const moveReflection = (project, reflection, newParent, newName) => {
   if (!newParent) return;
   const oldParent = reflection.parent;
   if (oldParent && oldParent.children) {
@@ -70,27 +66,27 @@ function moveReflection(project, reflection, newParent, newName) {
       oldParent.children.splice(idx, 1);
     }
   }
-  newParent.children ||= [];
+  newParent.children = newParent.children || [];
   if (!newParent.children.includes(reflection)) {
     newParent.children.push(reflection);
   }
   reflection.parent = newParent;
   reflection.name = newName;
-}
+};
 
-function moveChildren(target, source) {
+const moveChildren = (target, source) => {
   if (!source.children || !source.children.length) {
     return;
   }
-  target.children ||= [];
+  target.children = target.children || [];
   for (const child of source.children) {
     child.parent = target;
     target.children.push(child);
   }
   source.children.length = 0;
-}
+};
 
-function removeReflection(project, reflection) {
+const removeReflection = (project, reflection) => {
   if (reflection.parent && reflection.parent.children) {
     const idx = reflection.parent.children.indexOf(reflection);
     if (idx >= 0) {
@@ -99,4 +95,4 @@ function removeReflection(project, reflection) {
   }
   project.removeReflection(reflection, true);
   delete project.reflections[reflection.id];
-}
+};
