@@ -29,6 +29,7 @@ import { ComponentAbstract } from './libs/ComponentAbstact';
 import { HW } from './libs/hw';
 import { PeripheralGrove as PeripheralGrove } from './libs/io_peripherals/grove';
 import { ObnizOptions } from './ObnizOptions';
+import { Storage } from './libs/embeds/storage';
 import { Motion } from './libs/embeds/motion';
 import { Location } from './libs/embeds/location';
 import { IntelligentEdgeKiloComponent } from './libs/hw/iekilo1_components';
@@ -237,6 +238,11 @@ export abstract class ObnizComponents extends ObnizParts {
    * @category Embeds
    */
   public switch?: ObnizSwitch;
+
+  /**
+   * @category Embeds
+   */
+  public storage?: Storage;
 
   /**
    * @category Embeds
@@ -473,6 +479,7 @@ export abstract class ObnizComponents extends ObnizParts {
       display: Display,
       switch: ObnizSwitch,
       ble,
+      storage: Storage,
       motion: Motion,
       location: Location,
     };
