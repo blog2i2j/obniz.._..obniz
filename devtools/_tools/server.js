@@ -93,6 +93,7 @@ gulp.task('jsonSchemaDoc', (callback) => {
     'uart',
     'spi',
     'i2c',
+    'canbus',
     'logicAnalyzer',
     'measure',
     'display',
