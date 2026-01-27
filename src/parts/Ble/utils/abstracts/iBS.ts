@@ -36,11 +36,18 @@ type PresetConfigName =
   | 'button'
   | 'moving'
   | 'event'
+  | 'proximity'
+  | 'pir'
   | 'input_trigger'
   | 'fall'
   | 'acceleration'
   | 'temperature'
   | 'humidity'
+  | 'voltage'
+  | 'current'
+  | 'flood'
+  | 'triggered'
+  | 'triggered_count'
   | 'count'
   | 'user';
 
@@ -98,6 +105,14 @@ export abstract class BaseiBS<S> extends ObnizPartsBle<S> {
       index: 4,
       type: 'bool0100',
     },
+    pir: {
+      index: 4,
+      type: 'bool00010000',
+    },
+    proximity: {
+      index: 4,
+      type: 'bool00100000',
+    },
     input_trigger: {
       index: 4,
       type: 'bool01000000',
@@ -122,6 +137,31 @@ export abstract class BaseiBS<S> extends ObnizPartsBle<S> {
       index: 7,
       length: 2,
       type: 'numLE',
+    },
+    flood: {
+      index: 4,
+      type: 'bool01000000',
+    },
+    voltage: {
+      index: 7,
+      length: 2,
+      multiple: 0.001,
+      type: 'numLE',
+    },
+    current: {
+      index: 7,
+      length: 2,
+      multiple: 0.000001,
+      type: 'numLE',
+    },
+    triggered: {
+      index: 4,
+      type: 'bool01000000',
+    },
+    triggered_count: {
+      index: 7,
+      length: 2,
+      type: 'unsignedNumLE',
     },
     count: {
       index: 7,
